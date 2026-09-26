@@ -1,1 +1,22 @@
-
+{
+  "name": "LO JUSTO - Conductor",
+  "short_name": "LO JUSTO",
+  "description": "Aplicación de conductor de la plataforma LO JUSTO",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#160044",
+  "theme_color": "#160044",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "../icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "../icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
