@@ -897,6 +897,10 @@ async function tomarServicio(
 // ESCUCHAR SERVICIO ACTIVO
 // ============================================================
 
+// ============================================================
+// ESCUCHAR SERVICIO ACTIVO
+// ============================================================
+
 function escucharServicioActivo() {
 
   const referencia =
@@ -914,13 +918,18 @@ function escucharServicioActivo() {
       Object.entries(servicios).forEach(
         ([id, servicio]) => {
 
-          if (
+          const esDeEsteConductor =
             servicio.conductor_id ===
-              CONDUCTOR_ID &&
-            servicio.estado !==
-              "FINALIZADO" &&
-            servicio.estado !==
-              "CANCELADO"
+            CONDUCTOR_ID;
+
+          const esServicioActivo =
+            servicio.estado === "ASIGNADO" ||
+            servicio.estado === "CONDUCTOR_EN_SITIO" ||
+            servicio.estado === "EN_SERVICIO";
+
+          if (
+            esDeEsteConductor &&
+            esServicioActivo
           ) {
 
             encontrado = {
@@ -950,7 +959,6 @@ function escucharServicioActivo() {
   );
 
 }
-
 
 // ============================================================
 // CARGAR SERVICIO ACTIVO
