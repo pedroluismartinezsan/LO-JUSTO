@@ -268,6 +268,114 @@
 
 
     <!-- TAXÍMETRO -->
-    <div id="taximetro" class="tarjeta taximetro
+    <div id="taximetro" class="tarjeta taximetro oculto">
+
+      <div class="taximetro-titulo">
+        <span>LO JUSTO</span>
+        <small>TAXÍMETRO</small>
+      </div>
+
+      <div class="valor-total">
+        <small>VALOR ACTUAL</small>
+        <strong id="valorActual">
+          $0
+        </strong>
+      </div>
 
 
+      <div class="metricas">
+
+        <div class="metrica">
+          <span>📍 DISTANCIA</span>
+          <strong id="distanciaActual">
+            0.00 km
+          </strong>
+        </div>
+
+        <div class="metrica">
+          <span>⏱️ TIEMPO</span>
+          <strong id="tiempoActual">
+            0 min
+          </strong>
+        </div>
+
+      </div>
+
+      <div class="tarifas">
+
+        <span>
+          $1,50 / metro
+        </span>
+
+        <span>
+          $150 / minuto
+        </span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ESTADÍSTICAS -->
+  <div class="estadisticas">
+
+    <div class="tarjeta estadistica">
+      <span>🚗</span>
+      <small>SERVICIOS</small>
+      <strong id="totalServicios">0</strong>
+    </div>
+
+    <div class="tarjeta estadistica">
+      <span>💰</span>
+      <small>GENERADO</small>
+      <strong id="totalGenerado">$0</strong>
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- NOTIFICACIÓN -->
+<div id="notificacion" class="notificacion">
+  <span id="iconoNotificacion">✓</span>
+  <span id="textoNotificacion"></span>
+</div>
+```
+
+  </main>
+
+  <footer class="pie">
+
+```
+<span>LO JUSTO</span>
+<small>un servicio a tu manera.</small>
+```
+
+  </footer>
+  
+  <script type="module" src="app.js"></script>
+  <script type="module" src="app.js"></script>
+
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker
+        .register("./sw.js")
+        .then(() => {
+          console.log("LO JUSTO: Service Worker registrado.");
+        })
+        .catch((error) => {
+          console.error(
+            "LO JUSTO: Error registrando Service Worker:",
+            error
+          );
+        });
+    });
+  }
+</script>
+
+</body>
+</html>
