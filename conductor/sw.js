@@ -2,7 +2,7 @@
 // LO JUSTO - SERVICE WORKER
 // ============================================================
 
-const CACHE_NAME = "lo-justo-conductor-v1";
+const CACHE_NAME = "lo-justo-conductor-v2";
 
 const ARCHIVOS_CACHE = [
   "./",
@@ -75,19 +75,41 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
 
-  // Firebase, autenticación y recursos externos
-  // deben consultar la red.
+  const url = new URL(event.request.url);
+
+
+  // ----------------------------------------------------------
+  // SOLO MANEJAMOS PETICIONES HTTP/HTTPS
+  // ----------------------------------------------------------
 
   if (
-    event.request.url.includes("firebaseio.com") ||
-    event.request.url.includes("googleapis.com") ||
-    event.request.url.includes("gstatic.com")
+    url.protocol !== "http:" &&
+    url.protocol !== "https:"
   ) {
 
     return;
 
   }
 
+
+  // ----------------------------------------------------------
+  // FIREBASE Y RECURSOS EXTERNOS
+  // ----------------------------------------------------------
+
+  if (
+    url.hostname.includes("firebaseio.com") ||
+    url.hostname.includes("googleapis.com") ||
+    url.hostname.includes("gstatic.com")
+  ) {
+
+    return;
+
+  }
+
+
+  // ----------------------------------------------------------
+  // PETICIONES DE LA APLICACIÓN
+  // ----------------------------------------------------------
 
   event.respondWith(
 
@@ -106,8 +128,7 @@ self.addEventListener("fetch", (event) => {
 
             if (
               !respuestaRed ||
-              respuestaRed.status !== 200 ||
-              respuestaRed.type === "opaque"
+              respuestaRed.status !== 200
             ) {
 
               return respuestaRed;
@@ -125,6 +146,14 @@ self.addEventListener("fetch", (event) => {
                 cache.put(
                   event.request,
                   copia
+                );
+
+              })
+              .catch((error) => {
+
+                console.warn(
+                  "No se pudo guardar en caché:",
+                  error
                 );
 
               });
