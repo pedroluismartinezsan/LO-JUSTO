@@ -16,7 +16,6 @@ import {
   getDatabase,
   ref,
   get,
-  set,
   update,
   onValue,
   onDisconnect,
@@ -29,7 +28,7 @@ import {
 // ============================================================
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDuQ033fmDiX7BHRyLntLFjlXXb9jqFKXU",
+  apiKey: "AIzaSyDuQ033fmDiX7BHRyLntXXb9jqFKXU",
   authDomain: "lo-justo-495ec.firebaseapp.com",
   databaseURL: "https://lo-justo-495ec-default-rtdb.firebaseio.com",
   projectId: "lo-justo-495ec",
@@ -44,20 +43,13 @@ const firebaseConfig = {
 // ============================================================
 
 const app = initializeApp(firebaseConfig);
-
 const auth = getAuth(app);
-
 const db = getDatabase(app);
 
 
 // ============================================================
-// CONFIGURACIÓN DEL CONDUCTOR DE PRUEBA
+// CONDUCTOR DE PRUEBA
 // ============================================================
-
-// Por ahora usamos el conductor que creamos manualmente
-// en Firebase.
-// Más adelante lo relacionaremos directamente con el UID
-// de Firebase Authentication.
 
 const CONDUCTOR_ID = "conductor_prueba";
 
@@ -67,11 +59,8 @@ const CONDUCTOR_ID = "conductor_prueba";
 // ============================================================
 
 let conductorActual = null;
-
 let serviciosDisponibles = {};
-
 let servicioActivo = null;
-
 let servicioActivoId = null;
 
 let tarifas = {
@@ -82,19 +71,14 @@ let tarifas = {
 
 
 // ============================================================
-// VARIABLES DEL GPS
+// VARIABLES GPS / TAXÍMETRO
 // ============================================================
 
 let gpsWatchId = null;
-
 let ultimaPosicion = null;
-
 let distanciaMetros = 0;
-
 let inicioServicioMs = null;
-
 let intervaloTaximetro = null;
-
 let rastreandoServicio = false;
 
 
@@ -102,35 +86,50 @@ let rastreandoServicio = false;
 // ELEMENTOS HTML
 // ============================================================
 
-const pantallaCarga = document.getElementById("pantallaCarga");
+const pantallaCarga =
+  document.getElementById("pantallaCarga");
 
-const appPrincipal = document.getElementById("app");
+const appPrincipal =
+  document.getElementById("app");
 
-const pantallaLogin = document.getElementById("pantallaLogin");
+const pantallaLogin =
+  document.getElementById("pantallaLogin");
 
-const pantallaPrincipal = document.getElementById("pantallaPrincipal");
+const pantallaPrincipal =
+  document.getElementById("pantallaPrincipal");
 
-const formLogin = document.getElementById("formLogin");
+const formLogin =
+  document.getElementById("formLogin");
 
-const emailInput = document.getElementById("email");
+const emailInput =
+  document.getElementById("email");
 
-const passwordInput = document.getElementById("password");
+const passwordInput =
+  document.getElementById("password");
 
-const mensajeLogin = document.getElementById("mensajeLogin");
+const mensajeLogin =
+  document.getElementById("mensajeLogin");
 
-const textoEstado = document.getElementById("textoEstado");
+const textoEstado =
+  document.getElementById("textoEstado");
 
-const btnConexion = document.getElementById("btnConexion");
+const btnConexion =
+  document.getElementById("btnConexion");
 
-const estadoGPS = document.getElementById("estadoGPS");
+const estadoGPS =
+  document.getElementById("estadoGPS");
 
-const latitudElemento = document.getElementById("latitud");
+const latitudElemento =
+  document.getElementById("latitud");
 
-const longitudElemento = document.getElementById("longitud");
+const longitudElemento =
+  document.getElementById("longitud");
 
-const listaServicios = document.getElementById("listaServicios");
+const listaServicios =
+  document.getElementById("listaServicios");
 
-const contadorServicios = document.getElementById("contadorServicios");
+const contadorServicios =
+  document.getElementById("contadorServicios");
 
 const seccionServicioActivo =
   document.getElementById("seccionServicioActivo");
@@ -182,7 +181,7 @@ const textoNotificacion =
 
 
 // ============================================================
-// INICIO DE LA APLICACIÓN
+// INICIO
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -207,39 +206,44 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
 // ============================================================
-// CONFIGURAR EVENTOS
+// EVENTOS
 // ============================================================
 
 function configurarEventos() {
 
   if (formLogin) {
-
-    formLogin.addEventListener("submit", iniciarSesion);
-
+    formLogin.addEventListener(
+      "submit",
+      iniciarSesion
+    );
   }
 
   if (btnConexion) {
-
-    btnConexion.addEventListener("click", cambiarConexion);
-
+    btnConexion.addEventListener(
+      "click",
+      cambiarConexion
+    );
   }
 
   if (btnLlegue) {
-
-    btnLlegue.addEventListener("click", marcarLlegada);
-
+    btnLlegue.addEventListener(
+      "click",
+      marcarLlegada
+    );
   }
 
   if (btnStart) {
-
-    btnStart.addEventListener("click", iniciarServicio);
-
+    btnStart.addEventListener(
+      "click",
+      iniciarServicio
+    );
   }
 
   if (btnEnd) {
-
-    btnEnd.addEventListener("click", finalizarServicio);
-
+    btnEnd.addEventListener(
+      "click",
+      finalizarServicio
+    );
   }
 
 }
@@ -251,27 +255,35 @@ function configurarEventos() {
 
 function observarSesion() {
 
-  onAuthStateChanged(auth, async (usuario) => {
+  onAuthStateChanged(
+    auth,
+    async (usuario) => {
 
-    if (usuario) {
+      console.log(
+        "Estado de autenticación:",
+        usuario ? "AUTENTICADO" : "NO AUTENTICADO"
+      );
 
-      await cargarConductor();
+      if (usuario) {
 
-      mostrarPantallaPrincipal(true);
+        await cargarConductor();
 
-      escucharServicios();
+        mostrarPantallaPrincipal(true);
 
-      escucharServicioActivo();
+        escucharServicios();
 
-      escucharEstadisticas();
+        escucharServicioActivo();
 
-    } else {
+        escucharEstadisticas();
 
-      mostrarPantallaPrincipal(false);
+      } else {
+
+        mostrarPantallaPrincipal(false);
+
+      }
 
     }
-
-  });
+  );
 
 }
 
@@ -284,19 +296,25 @@ async function iniciarSesion(event) {
 
   event.preventDefault();
 
-  const email = emailInput.value.trim();
+  const email =
+    emailInput.value.trim();
 
-  const password = passwordInput.value;
+  const password =
+    passwordInput.value;
 
   if (!email || !password) {
 
-    mostrarMensajeLogin("Ingresa correo y contraseña.");
+    mostrarMensajeLogin(
+      "Ingresa correo y contraseña."
+    );
 
     return;
 
   }
 
-  mostrarMensajeLogin("Ingresando...");
+  mostrarMensajeLogin(
+    "Ingresando..."
+  );
 
   try {
 
@@ -310,26 +328,36 @@ async function iniciarSesion(event) {
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      "Error de inicio de sesión:",
+      error
+    );
 
-    let mensaje = "No fue posible iniciar sesión.";
+    let mensaje =
+      "No fue posible iniciar sesión.";
 
-    if (error.code === "auth/invalid-credential") {
-
-      mensaje = "Correo o contraseña incorrectos.";
-
+    if (
+      error.code ===
+      "auth/invalid-credential"
+    ) {
+      mensaje =
+        "Correo o contraseña incorrectos.";
     }
 
-    if (error.code === "auth/user-not-found") {
-
-      mensaje = "El usuario no existe.";
-
+    if (
+      error.code ===
+      "auth/user-not-found"
+    ) {
+      mensaje =
+        "El usuario no existe.";
     }
 
-    if (error.code === "auth/wrong-password") {
-
-      mensaje = "La contraseña es incorrecta.";
-
+    if (
+      error.code ===
+      "auth/wrong-password"
+    ) {
+      mensaje =
+        "La contraseña es incorrecta.";
     }
 
     mostrarMensajeLogin(mensaje);
@@ -349,7 +377,9 @@ async function cerrarSesion() {
 
   detenerTaximetro();
 
-  await actualizarEstadoConductor("desconectado");
+  await actualizarEstadoConductor(
+    "desconectado"
+  );
 
   await signOut(auth);
 
@@ -363,20 +393,36 @@ async function cerrarSesion() {
 async function cargarConductor() {
 
   const referencia =
-    ref(db, `conductores/${CONDUCTOR_ID}`);
+    ref(
+      db,
+      `conductores/${CONDUCTOR_ID}`
+    );
 
-  const snapshot = await get(referencia);
+  try {
 
-  if (snapshot.exists()) {
+    const snapshot =
+      await get(referencia);
 
-    conductorActual = snapshot.val();
+    if (snapshot.exists()) {
 
-    actualizarInterfazConductor();
+      conductorActual =
+        snapshot.val();
 
-  } else {
+      actualizarInterfazConductor();
 
-    mostrarNotificacion(
-      "No se encontró el conductor en Firebase."
+    } else {
+
+      mostrarNotificacion(
+        "No se encontró el conductor en Firebase."
+      );
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "Error cargando conductor:",
+      error
     );
 
   }
@@ -385,17 +431,20 @@ async function cargarConductor() {
 
 
 // ============================================================
-// INTERFAZ DEL CONDUCTOR
+// INTERFAZ CONDUCTOR
 // ============================================================
 
 function actualizarInterfazConductor() {
 
   if (!conductorActual) return;
 
+  const conectado =
+    conductorActual.estado === "conectado";
+
   if (textoEstado) {
 
     textoEstado.textContent =
-      conductorActual.estado === "conectado"
+      conectado
         ? "CONDUCTOR CONECTADO"
         : "CONDUCTOR DESCONECTADO";
 
@@ -404,9 +453,9 @@ function actualizarInterfazConductor() {
   if (btnConexion) {
 
     btnConexion.textContent =
-      conductorActual.estado === "conectado"
+      conectado
         ? "DESCONECTAR"
-        : "CONECTAR";
+        : "🟢 CONECTARME";
 
   }
 
@@ -426,7 +475,9 @@ async function cambiarConexion() {
 
   if (conectado) {
 
-    await actualizarEstadoConductor("desconectado");
+    await actualizarEstadoConductor(
+      "desconectado"
+    );
 
     detenerGPS();
 
@@ -436,7 +487,9 @@ async function cambiarConexion() {
 
   } else {
 
-    await actualizarEstadoConductor("conectado");
+    await actualizarEstadoConductor(
+      "conectado"
+    );
 
     iniciarGPS();
 
@@ -450,28 +503,31 @@ async function cambiarConexion() {
 
 
 // ============================================================
-// ACTUALIZAR ESTADO DEL CONDUCTOR
+// ACTUALIZAR ESTADO CONDUCTOR
 // ============================================================
 
-async function actualizarEstadoConductor(estado) {
+async function actualizarEstadoConductor(
+  estado
+) {
 
   try {
 
     const referencia =
-      ref(db, `conductores/${CONDUCTOR_ID}`);
+      ref(
+        db,
+        `conductores/${CONDUCTOR_ID}`
+      );
 
-    await update(referencia, {
-
-      estado: estado,
-
-      ultima_conexion: obtenerHora()
-
-    });
+    await update(
+      referencia,
+      {
+        estado: estado,
+        ultima_conexion: obtenerHora()
+      }
+    );
 
     if (conductorActual) {
-
       conductorActual.estado = estado;
-
     }
 
     actualizarInterfazConductor();
@@ -499,22 +555,35 @@ async function cargarTarifas() {
     const referencia =
       ref(db, "configuracion");
 
-    const snapshot = await get(referencia);
+    const snapshot =
+      await get(referencia);
 
-    if (!snapshot.exists()) return;
+    if (!snapshot.exists()) {
+      return;
+    }
 
-    const datos = snapshot.val();
+    const datos =
+      snapshot.val();
 
     tarifas.inicial =
-      Number(datos.tarifa_inicial ?? 0);
+      Number(
+        datos.tarifa_inicial ?? 0
+      );
 
     tarifas.metro =
-      Number(datos.tarifa_metro ?? 1.5);
+      Number(
+        datos.tarifa_metro ?? 1.5
+      );
 
     tarifas.minuto =
-      Number(datos.tarifa_minuto ?? 150);
+      Number(
+        datos.tarifa_minuto ?? 150
+      );
 
-    console.log("Tarifas cargadas:", tarifas);
+    console.log(
+      "Tarifas cargadas:",
+      tarifas
+    );
 
   } catch (error) {
 
@@ -529,7 +598,7 @@ async function cargarTarifas() {
 
 
 // ============================================================
-// ESCUCHAR SERVICIOS DISPONIBLES
+// SERVICIOS DISPONIBLES
 // ============================================================
 
 function escucharServicios() {
@@ -537,30 +606,35 @@ function escucharServicios() {
   const referencia =
     ref(db, "servicios");
 
-  onValue(referencia, (snapshot) => {
+  onValue(
+    referencia,
+    (snapshot) => {
 
-    const datos = snapshot.val() || {};
+      const datos =
+        snapshot.val() || {};
 
-    serviciosDisponibles = {};
+      serviciosDisponibles = {};
 
-    Object.entries(datos).forEach(
-      ([id, servicio]) => {
+      Object.entries(datos).forEach(
+        ([id, servicio]) => {
 
-        if (
-          servicio.estado === "BUSCANDO" &&
-          !servicio.conductor_id
-        ) {
+          if (
+            servicio.estado === "BUSCANDO" &&
+            !servicio.conductor_id
+          ) {
 
-          serviciosDisponibles[id] = servicio;
+            serviciosDisponibles[id] =
+              servicio;
+
+          }
 
         }
+      );
 
-      }
-    );
+      pintarServiciosDisponibles();
 
-    pintarServiciosDisponibles();
-
-  });
+    }
+  );
 
 }
 
@@ -576,7 +650,9 @@ function pintarServiciosDisponibles() {
   listaServicios.innerHTML = "";
 
   const ids =
-    Object.keys(serviciosDisponibles);
+    Object.keys(
+      serviciosDisponibles
+    );
 
   if (contadorServicios) {
 
@@ -591,7 +667,9 @@ function pintarServiciosDisponibles() {
       <div class="sin-servicios">
         <div class="icono-vacio">🚘</div>
         <p>No hay servicios disponibles</p>
-        <small>Cuando llegue una solicitud aparecerá aquí.</small>
+        <small>
+          Cuando llegue una solicitud aparecerá aquí.
+        </small>
       </div>
     `;
 
@@ -599,61 +677,71 @@ function pintarServiciosDisponibles() {
 
   }
 
-  ids.forEach((id) => {
+  ids.forEach(
+    (id) => {
 
-    const servicio =
-      serviciosDisponibles[id];
+      const servicio =
+        serviciosDisponibles[id];
 
-    const tarjeta =
-      document.createElement("div");
+      const tarjeta =
+        document.createElement("div");
 
-    tarjeta.className = "tarjeta-servicio";
+      tarjeta.className =
+        "tarjeta-servicio";
 
-    tarjeta.innerHTML = `
+      tarjeta.innerHTML = `
 
-      <div class="servicio-cabecera">
+        <div class="servicio-cabecera">
 
-        <span class="codigo">
-          #${servicio.codigo || id}
-        </span>
+          <span class="codigo">
+            #${servicio.codigo || id}
+          </span>
 
-        <span class="estado">
-          DISPONIBLE
-        </span>
+          <span class="estado">
+            DISPONIBLE
+          </span>
 
-      </div>
-
-      <div class="servicio-ruta">
-
-        <div>
-          <strong>📍 Origen</strong>
-          <span>${servicio.origen || "No especificado"}</span>
         </div>
 
-        <div>
-          <strong>🏁 Destino</strong>
-          <span>${servicio.destino || "Por definir"}</span>
+        <div class="servicio-ruta">
+
+          <div>
+            <strong>📍 Origen</strong>
+            <span>
+              ${servicio.origen || "No especificado"}
+            </span>
+          </div>
+
+          <div>
+            <strong>🏁 Destino</strong>
+            <span>
+              ${servicio.destino || "Por definir"}
+            </span>
+          </div>
+
         </div>
 
-      </div>
+        <button class="btn-tomar">
+          TOMAR SERVICIO
+        </button>
+      `;
 
-      <button class="btn-tomar">
-        TOMAR SERVICIO
-      </button>
+      const boton =
+        tarjeta.querySelector(
+          ".btn-tomar"
+        );
 
-    `;
+      boton.addEventListener(
+        "click",
+        () => tomarServicio(id)
+      );
 
-    const boton =
-      tarjeta.querySelector(".btn-tomar");
+      listaServicios.appendChild(
+        tarjeta
+      );
 
-    boton.addEventListener(
-      "click",
-      () => tomarServicio(id)
-    );
-
-    listaServicios.appendChild(tarjeta);
-
-  });
+    }
+  );
 
 }
 
@@ -662,10 +750,15 @@ function pintarServiciosDisponibles() {
 // TOMAR SERVICIO
 // ============================================================
 
-async function tomarServicio(servicioId) {
+async function tomarServicio(
+  servicioId
+) {
 
   const referencia =
-    ref(db, `servicios/${servicioId}`);
+    ref(
+      db,
+      `servicios/${servicioId}`
+    );
 
   try {
 
@@ -675,18 +768,14 @@ async function tomarServicio(servicioId) {
         (servicio) => {
 
           if (!servicio) {
-
             return;
-
           }
 
           if (
             servicio.estado !== "BUSCANDO" ||
             servicio.conductor_id
           ) {
-
             return;
-
           }
 
           servicio.conductor_id =
@@ -744,46 +833,52 @@ function escucharServicioActivo() {
   const referencia =
     ref(db, "servicios");
 
-  onValue(referencia, (snapshot) => {
+  onValue(
+    referencia,
+    (snapshot) => {
 
-    const servicios =
-      snapshot.val() || {};
+      const servicios =
+        snapshot.val() || {};
 
-    let encontrado = null;
+      let encontrado = null;
 
-    Object.entries(servicios).forEach(
-      ([id, servicio]) => {
+      Object.entries(servicios).forEach(
+        ([id, servicio]) => {
 
-        if (
-          servicio.conductor_id === CONDUCTOR_ID &&
-          servicio.estado !== "FINALIZADO" &&
-          servicio.estado !== "CANCELADO"
-        ) {
+          if (
+            servicio.conductor_id ===
+              CONDUCTOR_ID &&
+            servicio.estado !==
+              "FINALIZADO" &&
+            servicio.estado !==
+              "CANCELADO"
+          ) {
 
-          encontrado = {
-            id,
-            datos: servicio
-          };
+            encontrado = {
+              id,
+              datos: servicio
+            };
+
+          }
 
         }
-
-      }
-    );
-
-    if (encontrado) {
-
-      cargarServicioActivo(
-        encontrado.id,
-        encontrado.datos
       );
 
-    } else {
+      if (encontrado) {
 
-      ocultarServicioActivo();
+        cargarServicioActivo(
+          encontrado.id,
+          encontrado.datos
+        );
+
+      } else {
+
+        ocultarServicioActivo();
+
+      }
 
     }
-
-  });
+  );
 
 }
 
@@ -792,15 +887,22 @@ function escucharServicioActivo() {
 // CARGAR SERVICIO ACTIVO
 // ============================================================
 
-function cargarServicioActivo(id, servicio) {
+function cargarServicioActivo(
+  id,
+  servicio
+) {
 
   servicioActivoId = id;
-
   servicioActivo = servicio;
 
   if (seccionServicioActivo) {
 
-    seccionServicioActivo.style.display = "block";
+    seccionServicioActivo.classList.remove(
+      "oculto"
+    );
+
+    seccionServicioActivo.style.display =
+      "block";
 
   }
 
@@ -814,21 +916,24 @@ function cargarServicioActivo(id, servicio) {
   if (origenServicio) {
 
     origenServicio.textContent =
-      servicio.origen || "No especificado";
+      servicio.origen ||
+      "No especificado";
 
   }
 
   if (destinoServicio) {
 
     destinoServicio.textContent =
-      servicio.destino || "Por definir";
+      servicio.destino ||
+      "Por definir";
 
   }
 
   if (usuarioServicio) {
 
     usuarioServicio.textContent =
-      servicio.usuario_id || "Usuario";
+      servicio.usuario_id ||
+      "Usuario";
 
   }
 
@@ -858,6 +963,79 @@ function cargarServicioActivo(id, servicio) {
 
 
 // ============================================================
+// SEGUIMIENTO DE SERVICIO
+// ============================================================
+
+function iniciarSeguimientoServicio(
+  servicio
+) {
+
+  rastreandoServicio = true;
+
+  distanciaMetros =
+    Number(
+      servicio.distancia_metros || 0
+    );
+
+  if (servicio.hora_inicio) {
+
+    const partes =
+      servicio.hora_inicio
+        .split(":")
+        .map(Number);
+
+    if (partes.length >= 2) {
+
+      const ahora =
+        new Date();
+
+      const inicio =
+        new Date();
+
+      inicio.setHours(
+        partes[0],
+        partes[1],
+        partes[2] || 0,
+        0
+      );
+
+      let timestamp =
+        inicio.getTime();
+
+      if (
+        timestamp > ahora.getTime()
+      ) {
+
+        timestamp -=
+          24 * 60 * 60 * 1000;
+
+      }
+
+      inicioServicioMs =
+        timestamp;
+
+    } else {
+
+      inicioServicioMs =
+        Date.now();
+
+    }
+
+  } else {
+
+    inicioServicioMs =
+      Date.now();
+
+  }
+
+  iniciarGPS();
+
+  iniciarTaximetro();
+
+}
+
+
+// ============================================================
 // OCULTAR SERVICIO ACTIVO
 // ============================================================
 
@@ -865,12 +1043,16 @@ function ocultarServicioActivo() {
 
   if (seccionServicioActivo) {
 
-    seccionServicioActivo.style.display = "none";
+    seccionServicioActivo.classList.add(
+      "oculto"
+    );
+
+    seccionServicioActivo.style.display =
+      "none";
 
   }
 
   servicioActivo = null;
-
   servicioActivoId = null;
 
   detenerTaximetro();
@@ -884,36 +1066,50 @@ function ocultarServicioActivo() {
 // BOTONES SEGÚN ESTADO
 // ============================================================
 
-function actualizarBotonesServicio(estado) {
+function actualizarBotonesServicio(
+  estado
+) {
 
-  if (!btnLlegue || !btnStart || !btnEnd) {
+  if (
+    !btnLlegue ||
+    !btnStart ||
+    !btnEnd
+  ) {
     return;
   }
 
-  btnLlegue.style.display = "none";
+  btnLlegue.style.display =
+    "none";
 
-  btnStart.style.display = "none";
+  btnStart.style.display =
+    "none";
 
-  btnEnd.style.display = "none";
-
+  btnEnd.style.display =
+    "none";
 
   if (estado === "ASIGNADO") {
 
-    btnLlegue.style.display = "block";
+    btnLlegue.style.display =
+      "block";
 
   }
 
+  if (
+    estado ===
+    "CONDUCTOR_EN_SITIO"
+  ) {
 
-  if (estado === "CONDUCTOR_EN_SITIO") {
-
-    btnStart.style.display = "block";
+    btnStart.style.display =
+      "block";
 
   }
 
+  if (
+    estado === "EN_SERVICIO"
+  ) {
 
-  if (estado === "EN_SERVICIO") {
-
-    btnEnd.style.display = "block";
+    btnEnd.style.display =
+      "block";
 
   }
 
@@ -921,7 +1117,7 @@ function actualizarBotonesServicio(estado) {
 
 
 // ============================================================
-// MARCAR "LLEGUÉ"
+// MARCAR LLEGADA
 // ============================================================
 
 async function marcarLlegada() {
@@ -931,14 +1127,16 @@ async function marcarLlegada() {
   try {
 
     await update(
-      ref(db, `servicios/${servicioActivoId}`),
+      ref(
+        db,
+        `servicios/${servicioActivoId}`
+      ),
       {
-
-        estado: "CONDUCTOR_EN_SITIO",
+        estado:
+          "CONDUCTOR_EN_SITIO",
 
         hora_llegada:
           obtenerHora()
-
       }
     );
 
@@ -968,20 +1166,20 @@ async function iniciarServicio() {
   if (!servicioActivoId) return;
 
   distanciaMetros = 0;
-
   ultimaPosicion = null;
-
   inicioServicioMs = Date.now();
-
   rastreandoServicio = true;
 
   try {
 
     await update(
-      ref(db, `servicios/${servicioActivoId}`),
+      ref(
+        db,
+        `servicios/${servicioActivoId}`
+      ),
       {
-
-        estado: "EN_SERVICIO",
+        estado:
+          "EN_SERVICIO",
 
         hora_inicio:
           obtenerHora(),
@@ -994,8 +1192,8 @@ async function iniciarServicio() {
 
         valor_tiempo: 0,
 
-        valor_total: tarifas.inicial
-
+        valor_total:
+          tarifas.inicial
       }
     );
 
@@ -1011,6 +1209,9 @@ async function iniciarServicio() {
 
     console.error(error);
 
+    rastreandoServicio = false;
+    inicioServicioMs = null;
+
     mostrarNotificacion(
       "No fue posible iniciar el servicio."
     );
@@ -1021,7 +1222,7 @@ async function iniciarServicio() {
 
 
 // ============================================================
-// INICIAR TAXÍMETRO
+// TAXÍMETRO
 // ============================================================
 
 function iniciarTaximetro() {
@@ -1039,10 +1240,6 @@ function iniciarTaximetro() {
 }
 
 
-// ============================================================
-// ACTUALIZAR TAXÍMETRO
-// ============================================================
-
 function actualizarTaximetro() {
 
   if (!inicioServicioMs) return;
@@ -1051,22 +1248,25 @@ function actualizarTaximetro() {
     Date.now();
 
   const duracionMs =
-    ahora - inicioServicioMs;
+    ahora -
+    inicioServicioMs;
 
   const minutos =
-    duracionMs / 60000;
+    duracionMs /
+    60000;
 
   const valorDistancia =
-    distanciaMetros * tarifas.metro;
+    distanciaMetros *
+    tarifas.metro;
 
   const valorTiempo =
-    minutos * tarifas.minuto;
+    minutos *
+    tarifas.minuto;
 
   const total =
     tarifas.inicial +
     valorDistancia +
     valorTiempo;
-
 
   if (valorActual) {
 
@@ -1078,7 +1278,9 @@ function actualizarTaximetro() {
   if (distanciaActual) {
 
     distanciaActual.textContent =
-      `${(distanciaMetros / 1000).toFixed(2)} km`;
+      `${(
+        distanciaMetros / 1000
+      ).toFixed(2)} km`;
 
   }
 
@@ -1092,15 +1294,13 @@ function actualizarTaximetro() {
 }
 
 
-// ============================================================
-// DETENER TAXÍMETRO
-// ============================================================
-
 function detenerTaximetro() {
 
   if (intervaloTaximetro) {
 
-    clearInterval(intervaloTaximetro);
+    clearInterval(
+      intervaloTaximetro
+    );
 
     intervaloTaximetro = null;
 
@@ -1131,64 +1331,75 @@ async function finalizarServicio() {
     Date.now();
 
   const duracionMs =
-    ahora - inicioServicioMs;
+    ahora -
+    inicioServicioMs;
 
   const duracionMinutos =
-    duracionMs / 60000;
+    duracionMs /
+    60000;
 
   const valorDistancia =
-    distanciaMetros * tarifas.metro;
+    distanciaMetros *
+    tarifas.metro;
 
   const valorTiempo =
-    duracionMinutos * tarifas.minuto;
+    duracionMinutos *
+    tarifas.minuto;
 
   const valorTotal =
     tarifas.inicial +
     valorDistancia +
     valorTiempo;
 
-
   detenerTaximetro();
-
   detenerGPS();
 
   rastreandoServicio = false;
 
-
   try {
 
     await update(
-      ref(db, `servicios/${servicioActivoId}`),
+      ref(
+        db,
+        `servicios/${servicioActivoId}`
+      ),
       {
-
-        estado: "FINALIZADO",
+        estado:
+          "FINALIZADO",
 
         hora_finalizacion:
           obtenerHora(),
 
         distancia_metros:
-          Math.round(distanciaMetros),
+          Math.round(
+            distanciaMetros
+          ),
 
         duracion_minutos:
-          Number(duracionMinutos.toFixed(2)),
+          Number(
+            duracionMinutos.toFixed(2)
+          ),
 
         valor_distancia:
-          Math.round(valorDistancia),
+          Math.round(
+            valorDistancia
+          ),
 
         valor_tiempo:
-          Math.round(valorTiempo),
+          Math.round(
+            valorTiempo
+          ),
 
         valor_total:
-          Math.round(valorTotal)
-
+          Math.round(
+            valorTotal
+          )
       }
     );
-
 
     mostrarNotificacion(
       `Servicio finalizado. Total: ${formatoPesos(valorTotal)}`
     );
-
 
     mostrarResultadoFinal(
       distanciaMetros,
@@ -1198,13 +1409,9 @@ async function finalizarServicio() {
       valorTotal
     );
 
-
     distanciaMetros = 0;
-
     inicioServicioMs = null;
-
     ultimaPosicion = null;
-
 
   } catch (error) {
 
@@ -1220,7 +1427,7 @@ async function finalizarServicio() {
 
 
 // ============================================================
-// MOSTRAR RESULTADO FINAL
+// RESULTADO FINAL
 // ============================================================
 
 function mostrarResultadoFinal(
@@ -1241,14 +1448,18 @@ function mostrarResultadoFinal(
   if (distanciaActual) {
 
     distanciaActual.textContent =
-      `${(distancia / 1000).toFixed(2)} km`;
+      `${(
+        distancia / 1000
+      ).toFixed(2)} km`;
 
   }
 
   if (tiempoActual) {
 
     tiempoActual.textContent =
-      formatoTiempo(minutos * 60000);
+      formatoTiempo(
+        minutos * 60000
+      );
 
   }
 
@@ -1256,7 +1467,7 @@ function mostrarResultadoFinal(
 
 
 // ============================================================
-// GPS GENERAL
+// GPS
 // ============================================================
 
 function iniciarGPS() {
@@ -1272,31 +1483,23 @@ function iniciarGPS() {
   }
 
   if (gpsWatchId !== null) {
-
     return;
-
   }
 
   actualizarEstadoGPS(
     "Buscando ubicación..."
   );
 
-
   gpsWatchId =
     navigator.geolocation.watchPosition(
-
       recibirPosicion,
-
       errorGPS,
-
       {
         enableHighAccuracy: true,
         maximumAge: 2000,
         timeout: 10000
       }
-
     );
-
 
   configurarDesconexion();
 
@@ -1307,7 +1510,9 @@ function iniciarGPS() {
 // RECIBIR POSICIÓN
 // ============================================================
 
-async function recibirPosicion(position) {
+async function recibirPosicion(
+  position
+) {
 
   const lat =
     position.coords.latitude;
@@ -1317,7 +1522,6 @@ async function recibirPosicion(position) {
 
   const accuracy =
     position.coords.accuracy;
-
 
   if (latitudElemento) {
 
@@ -1333,15 +1537,9 @@ async function recibirPosicion(position) {
 
   }
 
-
   actualizarEstadoGPS(
     `GPS activo ±${Math.round(accuracy)} m`
   );
-
-
-  // ----------------------------------------------------------
-  // CALCULAR DISTANCIA DEL SERVICIO
-  // ----------------------------------------------------------
 
   if (
     rastreandoServicio &&
@@ -1361,16 +1559,13 @@ async function recibirPosicion(position) {
           lon
         );
 
-
-      // Evitamos pequeños movimientos causados
-      // por la imprecisión normal del GPS.
-
       if (
         distancia >= 2 &&
         distancia <= 300
       ) {
 
-        distanciaMetros += distancia;
+        distanciaMetros +=
+          distancia;
 
       }
 
@@ -1389,11 +1584,6 @@ async function recibirPosicion(position) {
 
   }
 
-
-  // ----------------------------------------------------------
-  // GUARDAR UBICACIÓN DEL CONDUCTOR
-  // ----------------------------------------------------------
-
   try {
 
     await update(
@@ -1402,14 +1592,10 @@ async function recibirPosicion(position) {
         `ubicacion_conductores/${CONDUCTOR_ID}`
       ),
       {
-
         latitud: lat,
-
         longitud: lon,
-
         ultima_actualizacion:
           obtenerHora()
-
       }
     );
 
@@ -1436,10 +1622,8 @@ function errorGPS(error) {
     error
   );
 
-
   let mensaje =
     "No se pudo obtener la ubicación.";
-
 
   if (error.code === 1) {
 
@@ -1462,8 +1646,9 @@ function errorGPS(error) {
 
   }
 
-
-  actualizarEstadoGPS(mensaje);
+  actualizarEstadoGPS(
+    mensaje
+  );
 
 }
 
@@ -1503,23 +1688,24 @@ function configurarDesconexion() {
       `conductores/${CONDUCTOR_ID}/estado`
     );
 
-
   onDisconnect(referencia)
     .set("desconectado")
-    .catch((error) => {
+    .catch(
+      (error) => {
 
-      console.error(
-        "Error configurando desconexión:",
-        error
-      );
+        console.error(
+          "Error configurando desconexión:",
+          error
+        );
 
-    });
+      }
+    );
 
 }
 
 
 // ============================================================
-// DISTANCIA GPS - HAVERSINE
+// HAVERSINE
 // ============================================================
 
 function calcularDistanciaGPS(
@@ -1529,11 +1715,8 @@ function calcularDistanciaGPS(
   lon2
 ) {
 
-  const R =
-    6371000;
-
-  const rad =
-    Math.PI / 180;
+  const R = 6371000;
+  const rad = Math.PI / 180;
 
   const diferenciaLat =
     (lat2 - lat1) * rad;
@@ -1542,14 +1725,22 @@ function calcularDistanciaGPS(
     (lon2 - lon1) * rad;
 
   const a =
-    Math.sin(diferenciaLat / 2) *
-    Math.sin(diferenciaLat / 2) +
+    Math.sin(
+      diferenciaLat / 2
+    ) *
+    Math.sin(
+      diferenciaLat / 2
+    ) +
 
     Math.cos(lat1 * rad) *
     Math.cos(lat2 * rad) *
 
-    Math.sin(diferenciaLon / 2) *
-    Math.sin(diferenciaLon / 2);
+    Math.sin(
+      diferenciaLon / 2
+    ) *
+    Math.sin(
+      diferenciaLon / 2
+    );
 
   const c =
     2 *
@@ -1588,54 +1779,58 @@ function escucharEstadisticas() {
   const referencia =
     ref(db, "servicios");
 
-  onValue(referencia, (snapshot) => {
+  onValue(
+    referencia,
+    (snapshot) => {
 
-    const servicios =
-      snapshot.val() || {};
+      const servicios =
+        snapshot.val() || {};
 
-    let cantidad = 0;
+      let cantidad = 0;
+      let generado = 0;
 
-    let generado = 0;
+      Object.values(servicios)
+        .forEach(
+          (servicio) => {
 
+            if (
+              servicio.conductor_id ===
+                CONDUCTOR_ID &&
+              servicio.estado ===
+                "FINALIZADO"
+            ) {
 
-    Object.values(servicios).forEach(
-      (servicio) => {
+              cantidad++;
 
-        if (
-          servicio.conductor_id ===
-            CONDUCTOR_ID &&
-          servicio.estado ===
-            "FINALIZADO"
-        ) {
+              generado +=
+                Number(
+                  servicio.valor_total ||
+                  0
+                );
 
-          cantidad++;
+            }
 
-          generado +=
-            Number(
-              servicio.valor_total || 0
-            );
+          }
+        );
 
-        }
+      if (totalServicios) {
+
+        totalServicios.textContent =
+          cantidad;
 
       }
-    );
 
+      if (totalGenerado) {
 
-    if (totalServicios) {
+        totalGenerado.textContent =
+          formatoPesos(
+            generado
+          );
 
-      totalServicios.textContent =
-        cantidad;
-
-    }
-
-    if (totalGenerado) {
-
-      totalGenerado.textContent =
-        formatoPesos(generado);
+      }
 
     }
-
-  });
+  );
 
 }
 
@@ -1644,27 +1839,36 @@ function escucharEstadisticas() {
 // NOTIFICACIONES
 // ============================================================
 
-function mostrarNotificacion(mensaje) {
+function mostrarNotificacion(
+  mensaje
+) {
 
-  if (!notificacion || !textoNotificacion) {
-
+  if (
+    !notificacion ||
+    !textoNotificacion
+  ) {
     return;
-
   }
 
   textoNotificacion.textContent =
     mensaje;
 
-  notificacion.classList.add("mostrar");
+  // IMPORTANTE:
+  // style.css utiliza .visible
+  notificacion.classList.add(
+    "visible"
+  );
 
+  setTimeout(
+    () => {
 
-  setTimeout(() => {
+      notificacion.classList.remove(
+        "visible"
+      );
 
-    notificacion.classList.remove(
-      "mostrar"
-    );
-
-  }, 4000);
+    },
+    4000
+  );
 
 }
 
@@ -1673,7 +1877,9 @@ function mostrarNotificacion(mensaje) {
 // MENSAJE LOGIN
 // ============================================================
 
-function mostrarMensajeLogin(mensaje) {
+function mostrarMensajeLogin(
+  mensaje
+) {
 
   if (mensajeLogin) {
 
@@ -1693,24 +1899,45 @@ function mostrarPantallaPrincipal(
   mostrar
 ) {
 
+  // ELIMINAMOS LA CLASE QUE OCULTA
+  // EL CONTENEDOR PRINCIPAL
+
+  if (appPrincipal) {
+
+    appPrincipal.classList.remove(
+      "oculto"
+    );
+
+    appPrincipal.style.display =
+      "block";
+
+  }
+
   if (pantallaLogin) {
 
+    pantallaLogin.classList.toggle(
+      "oculto",
+      mostrar
+    );
+
     pantallaLogin.style.display =
-      mostrar ? "none" : "block";
+      mostrar
+        ? "none"
+        : "block";
 
   }
 
   if (pantallaPrincipal) {
 
+    pantallaPrincipal.classList.toggle(
+      "oculto",
+      !mostrar
+    );
+
     pantallaPrincipal.style.display =
-      mostrar ? "block" : "none";
-
-  }
-
-  if (appPrincipal) {
-
-    appPrincipal.style.display =
-      "block";
+      mostrar
+        ? "block"
+        : "none";
 
   }
 
@@ -1718,10 +1945,12 @@ function mostrarPantallaPrincipal(
 
 
 // ============================================================
-// FORMATO DE DINERO
+// FORMATO DINERO
 // ============================================================
 
-function formatoPesos(valor) {
+function formatoPesos(
+  valor
+) {
 
   return new Intl.NumberFormat(
     "es-CO",
@@ -1738,13 +1967,17 @@ function formatoPesos(valor) {
 
 
 // ============================================================
-// FORMATO DE TIEMPO
+// FORMATO TIEMPO
 // ============================================================
 
-function formatoTiempo(ms) {
+function formatoTiempo(
+  ms
+) {
 
   const totalSegundos =
-    Math.floor(ms / 1000);
+    Math.floor(
+      ms / 1000
+    );
 
   const horas =
     Math.floor(
@@ -1753,12 +1986,12 @@ function formatoTiempo(ms) {
 
   const minutos =
     Math.floor(
-      (totalSegundos % 3600) / 60
+      (totalSegundos % 3600) /
+      60
     );
 
   const segundos =
     totalSegundos % 60;
-
 
   if (horas > 0) {
 
@@ -1766,14 +1999,13 @@ function formatoTiempo(ms) {
 
   }
 
-
   return `${String(minutos).padStart(2, "0")}:${String(segundos).padStart(2, "0")}`;
 
 }
 
 
 // ============================================================
-// OBTENER HORA ACTUAL
+// HORA
 // ============================================================
 
 function obtenerHora() {
