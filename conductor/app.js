@@ -441,6 +441,11 @@ function actualizarInterfazConductor() {
   const conectado =
     conductorActual.estado === "conectado";
 
+
+  // ==========================================================
+  // ESTADO PRINCIPAL DEL CONDUCTOR
+  // ==========================================================
+
   if (textoEstado) {
 
     textoEstado.textContent =
@@ -450,12 +455,76 @@ function actualizarInterfazConductor() {
 
   }
 
+
+  // ==========================================================
+  // BOTÓN CONECTAR / DESCONECTAR
+  // ==========================================================
+
   if (btnConexion) {
 
     btnConexion.textContent =
       conectado
         ? "DESCONECTAR"
         : "🟢 CONECTARME";
+
+  }
+
+
+  // ==========================================================
+  // INDICADOR DEL ENCABEZADO
+  // ==========================================================
+
+  const indicadorConexion =
+    document.getElementById(
+      "indicadorConexion"
+    );
+
+  const textoConexion =
+    document.getElementById(
+      "textoConexion"
+    );
+
+
+  if (indicadorConexion) {
+
+    indicadorConexion.classList.toggle(
+      "conectado",
+      conectado
+    );
+
+    indicadorConexion.classList.toggle(
+      "desconectado",
+      !conectado
+    );
+
+  }
+
+
+  if (textoConexion) {
+
+    textoConexion.textContent =
+      conectado
+        ? "Conectado"
+        : "Desconectado";
+
+  }
+
+
+  // ==========================================================
+  // ESTADO GRANDE
+  // ==========================================================
+
+  const estadoConductor =
+    document.getElementById(
+      "estadoConductor"
+    );
+
+  if (estadoConductor) {
+
+    estadoConductor.textContent =
+      conectado
+        ? "CONECTADO"
+        : "DESCONECTADO";
 
   }
 
