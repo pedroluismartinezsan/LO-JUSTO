@@ -435,11 +435,7 @@ linear-gradient(
 box-shadow:
 0 0 20px rgba(255, 59, 107, 0.25);
 }
-#btnEnd {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
+
 /* =========================================================
 MENSAJES
 ========================================================= */
