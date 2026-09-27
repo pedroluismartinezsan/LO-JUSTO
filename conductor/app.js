@@ -1164,53 +1164,31 @@ function ocultarServicioActivo() {
 // BOTONES SEGÚN ESTADO
 // ============================================================
 
-function actualizarBotonesServicio(
-  estado
-) {
+function actualizarBotonesServicio(estado) {
 
-  if (
-    !btnLlegue ||
-    !btnStart ||
-    !btnEnd
-  ) {
+  if (!btnLlegue || !btnStart || !btnEnd) {
     return;
   }
 
-  btnLlegue.style.display =
-    "none";
+  // Ocultar todos primero
+  btnLlegue.style.display = "none";
+  btnStart.style.display = "none";
+  btnEnd.style.display = "none";
 
-  btnStart.style.display =
-    "none";
-
-  btnEnd.style.display =
-    "none";
-
+  // Servicio asignado → llegó al punto
   if (estado === "ASIGNADO") {
-
-    btnLlegue.style.display =
-      "block";
-
+    btnLlegue.style.display = "block";
   }
 
-  if (
-    estado ===
-    "CONDUCTOR_EN_SITIO"
-  ) {
-
-    btnStart.style.display =
-      "block";
-
+  // Conductor llegó → iniciar servicio
+  if (estado === "CONDUCTOR_EN_SITIO") {
+    btnStart.style.display = "block";
   }
 
-  if (
-    estado === "EN_SERVICIO"
-  ) {
-
-    btnEnd.style.display =
-      "block";
-
+  // Servicio iniciado → finalizar
+  if (estado === "EN_SERVICIO") {
+    btnEnd.style.display = "block";
   }
-
 }
 
 
