@@ -1024,24 +1024,26 @@ function cargarServicioActivo(
   // MOSTRAR / OCULTAR TAXÍMETRO
   // ==========================================================
 
-  const taximetro =
-    document.getElementById("taximetro");
+  // ==========================================================
+// MOSTRAR / OCULTAR TAXÍMETRO
+// ==========================================================
 
-  if (taximetro) {
+const taximetro =
+  document.getElementById("taximetro");
 
-    if (servicio.estado === "EN_SERVICIO") {
+if (taximetro) {
 
-      taximetro.classList.remove("oculto");
-      taximetro.style.display = "block";
+  if (servicio.estado === "EN_SERVICIO") {
 
-    } else {
+    taximetro.classList.remove("oculto");
 
-      taximetro.classList.add("oculto");
-      taximetro.style.display = "none";
+  } else {
 
-    }
+    taximetro.classList.add("oculto");
 
   }
+
+}
   actualizarBotonesServicio(
     servicio.estado
   );
