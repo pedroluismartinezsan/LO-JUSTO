@@ -1164,31 +1164,51 @@ function ocultarServicioActivo() {
 // BOTONES SEGÚN ESTADO
 // ============================================================
 
+// ============================================================
+// BOTONES SEGÚN ESTADO
+// ============================================================
+
 function actualizarBotonesServicio(estado) {
 
   if (!btnLlegue || !btnStart || !btnEnd) {
     return;
   }
 
-  // Ocultar todos primero
-  btnLlegue.style.display = "none";
-  btnStart.style.display = "none";
-  btnEnd.style.display = "none";
+  // Ocultar todos correctamente
+  btnLlegue.classList.add("oculto");
+  btnStart.classList.add("oculto");
+  btnEnd.classList.add("oculto");
 
-  // Servicio asignado → llegó al punto
+  // ----------------------------------------------------------
+  // SERVICIO ASIGNADO
+  // ----------------------------------------------------------
+
   if (estado === "ASIGNADO") {
-    btnLlegue.style.display = "block";
+
+    btnLlegue.classList.remove("oculto");
+
   }
 
-  // Conductor llegó → iniciar servicio
+  // ----------------------------------------------------------
+  // CONDUCTOR EN EL PUNTO
+  // ----------------------------------------------------------
+
   if (estado === "CONDUCTOR_EN_SITIO") {
-    btnStart.style.display = "block";
+
+    btnStart.classList.remove("oculto");
+
   }
 
-  // Servicio iniciado → finalizar
+  // ----------------------------------------------------------
+  // SERVICIO EN CURSO
+  // ----------------------------------------------------------
+
   if (estado === "EN_SERVICIO") {
-    btnEnd.style.display = "block";
+
+    btnEnd.classList.remove("oculto");
+
   }
+
 }
 
 
