@@ -1,6 +1,6 @@
 // ============================================================
 // LO JUSTO - APP DEL CONDUCTOR
-// Versión inicial funcional
+// Versión corregida
 // ============================================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
@@ -48,7 +48,7 @@ const db = getDatabase(app);
 
 
 // ============================================================
-// CONDUCTOR DE PRUEBA
+// CONDUCTOR
 // ============================================================
 
 const CONDUCTOR_ID = "conductor_prueba";
@@ -250,6 +250,20 @@ function configurarEventos() {
 
 
 // ============================================================
+// VALIDAR QUE EL CONDUCTOR ESTÉ CONECTADO
+// ============================================================
+
+function conductorEstaConectado() {
+
+  return (
+    conductorActual &&
+    conductorActual.estado === "conectado"
+  );
+
+}
+
+
+// ============================================================
 // SESIÓN
 // ============================================================
 
@@ -280,6 +294,12 @@ function observarSesion() {
 
         mostrarPantallaPrincipal(false);
 
+        conductorActual = null;
+
+        serviciosDisponibles = {};
+
+        pintarServiciosDisponibles();
+
       }
 
     }
@@ -309,7 +329,6 @@ async function iniciarSesion(event) {
     );
 
     return;
-
   }
 
   mostrarMensajeLogin(
@@ -381,6 +400,12 @@ async function cerrarSesion() {
     "desconectado"
   );
 
+  serviciosDisponibles = {};
+
+  pintarServiciosDisponibles();
+
+  ocultarServicioActivo();
+
   await signOut(auth);
 
 }
@@ -409,6 +434,20 @@ async function cargarConductor() {
         snapshot.val();
 
       actualizarInterfazConductor();
+
+      // IMPORTANTE:
+      // Si entra a la aplicación pero Firebase dice
+      // que está desconectado, NO se inicia GPS.
+
+      if (!conductorEstaConectado()) {
+
+        detenerGPS();
+
+        serviciosDisponibles = {};
+
+        pintarServiciosDisponibles();
+
+      }
 
     } else {
 
@@ -442,10 +481,6 @@ function actualizarInterfazConductor() {
     conductorActual.estado === "conectado";
 
 
-  // ==========================================================
-  // ESTADO PRINCIPAL DEL CONDUCTOR
-  // ==========================================================
-
   if (textoEstado) {
 
     textoEstado.textContent =
@@ -456,10 +491,6 @@ function actualizarInterfazConductor() {
   }
 
 
-  // ==========================================================
-  // BOTÓN CONECTAR / DESCONECTAR
-  // ==========================================================
-
   if (btnConexion) {
 
     btnConexion.textContent =
@@ -469,10 +500,6 @@ function actualizarInterfazConductor() {
 
   }
 
-
-  // ==========================================================
-  // INDICADOR DEL ENCABEZADO
-  // ==========================================================
 
   const indicadorConexion =
     document.getElementById(
@@ -510,10 +537,6 @@ function actualizarInterfazConductor() {
   }
 
 
-  // ==========================================================
-  // ESTADO GRANDE
-  // ==========================================================
-
   const estadoConductor =
     document.getElementById(
       "estadoConductor"
@@ -550,6 +573,10 @@ async function cambiarConexion() {
 
     detenerGPS();
 
+    serviciosDisponibles = {};
+
+    pintarServiciosDisponibles();
+
     mostrarNotificacion(
       "Te desconectaste correctamente."
     );
@@ -561,6 +588,8 @@ async function cambiarConexion() {
     );
 
     iniciarGPS();
+
+    escucharServicios();
 
     mostrarNotificacion(
       "Estás disponible para recibir servicios."
@@ -679,6 +708,19 @@ function escucharServicios() {
     referencia,
     (snapshot) => {
 
+      // ======================================================
+      // BLOQUEO: SI NO ESTÁ CONECTADO, NO MOSTRAR SERVICIOS
+      // ======================================================
+
+      if (!conductorEstaConectado()) {
+
+        serviciosDisponibles = {};
+
+        pintarServiciosDisponibles();
+
+        return;
+      }
+
       const datos =
         snapshot.val() || {};
 
@@ -743,7 +785,6 @@ function pintarServiciosDisponibles() {
     `;
 
     return;
-
   }
 
   ids.forEach(
@@ -823,6 +864,19 @@ async function tomarServicio(
   servicioId
 ) {
 
+  // ==========================================================
+  // BLOQUEO DE SEGURIDAD
+  // ==========================================================
+
+  if (!conductorEstaConectado()) {
+
+    mostrarNotificacion(
+      "Debes conectarte para tomar un servicio."
+    );
+
+    return;
+  }
+
   const referencia =
     ref(
       db,
@@ -897,10 +951,6 @@ async function tomarServicio(
 // ESCUCHAR SERVICIO ACTIVO
 // ============================================================
 
-// ============================================================
-// ESCUCHAR SERVICIO ACTIVO
-// ============================================================
-
 function escucharServicioActivo() {
 
   const referencia =
@@ -959,6 +1009,7 @@ function escucharServicioActivo() {
   );
 
 }
+
 
 // ============================================================
 // CARGAR SERVICIO ACTIVO
@@ -1020,33 +1071,44 @@ function cargarServicioActivo(
       servicio.estado || "";
 
   }
-  // ==========================================================
-  // MOSTRAR / OCULTAR TAXÍMETRO
-  // ==========================================================
+
 
   // ==========================================================
-// MOSTRAR / OCULTAR TAXÍMETRO
-// ==========================================================
+  // TAXÍMETRO
+  // ==========================================================
 
-const taximetro =
-  document.getElementById("taximetro");
+  const taximetro =
+    document.getElementById("taximetro");
 
-if (taximetro) {
+  if (taximetro) {
 
-  if (servicio.estado === "EN_SERVICIO") {
+    if (servicio.estado === "EN_SERVICIO") {
 
-    taximetro.classList.remove("oculto");
+      taximetro.classList.remove("oculto");
 
-  } else {
+      taximetro.style.display =
+        "block";
 
-    taximetro.classList.add("oculto");
+    } else {
+
+      taximetro.classList.add("oculto");
+
+      taximetro.style.display =
+        "none";
+
+    }
 
   }
 
-}
+
+  // ==========================================================
+  // BOTONES
+  // ==========================================================
+
   actualizarBotonesServicio(
     servicio.estado
   );
+
 
   if (
     servicio.estado === "EN_SERVICIO" &&
@@ -1159,6 +1221,10 @@ function ocultarServicioActivo() {
 
   rastreandoServicio = false;
 
+  inicioServicioMs = null;
+  distanciaMetros = 0;
+  ultimaPosicion = null;
+
 }
 
 
@@ -1166,24 +1232,26 @@ function ocultarServicioActivo() {
 // BOTONES SEGÚN ESTADO
 // ============================================================
 
-// ============================================================
-// BOTONES SEGÚN ESTADO
-// ============================================================
-
-function actualizarBotonesServicio(estado) {
+function actualizarBotonesServicio(
+  estado
+) {
 
   if (!btnLlegue || !btnStart || !btnEnd) {
     return;
   }
 
-  // Ocultar todos correctamente
+  // ==========================================================
+  // OCULTAR TODOS
+  // ==========================================================
+
   btnLlegue.classList.add("oculto");
   btnStart.classList.add("oculto");
   btnEnd.classList.add("oculto");
 
-  // ----------------------------------------------------------
-  // SERVICIO ASIGNADO
-  // ----------------------------------------------------------
+
+  // ==========================================================
+  // ASIGNADO
+  // ==========================================================
 
   if (estado === "ASIGNADO") {
 
@@ -1191,9 +1259,10 @@ function actualizarBotonesServicio(estado) {
 
   }
 
-  // ----------------------------------------------------------
-  // CONDUCTOR EN EL PUNTO
-  // ----------------------------------------------------------
+
+  // ==========================================================
+  // CONDUCTOR EN SITIO
+  // ==========================================================
 
   if (estado === "CONDUCTOR_EN_SITIO") {
 
@@ -1201,9 +1270,10 @@ function actualizarBotonesServicio(estado) {
 
   }
 
-  // ----------------------------------------------------------
-  // SERVICIO EN CURSO
-  // ----------------------------------------------------------
+
+  // ==========================================================
+  // EN SERVICIO
+  // ==========================================================
 
   if (estado === "EN_SERVICIO") {
 
@@ -1220,21 +1290,42 @@ function actualizarBotonesServicio(estado) {
 
 async function marcarLlegada() {
 
-  if (!servicioActivoId) return;
+  if (!conductorEstaConectado()) {
+
+    mostrarNotificacion(
+      "Debes conectarte para marcar la llegada."
+    );
+
+    return;
+  }
+
+  if (!servicioActivoId) {
+
+    mostrarNotificacion(
+      "No hay un servicio activo."
+    );
+
+    return;
+  }
+
+  const idServicio =
+    servicioActivoId;
 
   try {
 
     await update(
       ref(
         db,
-        `servicios/${servicioActivoId}`
+        `servicios/${idServicio}`
       ),
       {
+
         estado:
           "CONDUCTOR_EN_SITIO",
 
         hora_llegada:
           obtenerHora()
+
       }
     );
 
@@ -1244,7 +1335,10 @@ async function marcarLlegada() {
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      "Error marcando llegada:",
+      error
+    );
 
     mostrarNotificacion(
       "No fue posible actualizar el servicio."
@@ -1261,7 +1355,26 @@ async function marcarLlegada() {
 
 async function iniciarServicio() {
 
-  if (!servicioActivoId) return;
+  if (!conductorEstaConectado()) {
+
+    mostrarNotificacion(
+      "Debes conectarte para iniciar el servicio."
+    );
+
+    return;
+  }
+
+  if (!servicioActivoId) {
+
+    mostrarNotificacion(
+      "No hay un servicio activo."
+    );
+
+    return;
+  }
+
+  const idServicio =
+    servicioActivoId;
 
   distanciaMetros = 0;
   ultimaPosicion = null;
@@ -1273,14 +1386,18 @@ async function iniciarServicio() {
     await update(
       ref(
         db,
-        `servicios/${servicioActivoId}`
+        `servicios/${idServicio}`
       ),
       {
+
         estado:
           "EN_SERVICIO",
 
         hora_inicio:
           obtenerHora(),
+
+        timestamp_inicio:
+          Date.now(),
 
         distancia_metros: 0,
 
@@ -1292,6 +1409,7 @@ async function iniciarServicio() {
 
         valor_total:
           tarifas.inicial
+
       }
     );
 
@@ -1305,7 +1423,10 @@ async function iniciarServicio() {
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      "Error iniciando servicio:",
+      error
+    );
 
     rastreandoServicio = false;
     inicioServicioMs = null;
@@ -1385,7 +1506,9 @@ function actualizarTaximetro() {
   if (tiempoActual) {
 
     tiempoActual.textContent =
-      formatoTiempo(duracionMs);
+      formatoTiempo(
+        duracionMs
+      );
 
   }
 
@@ -1411,11 +1534,16 @@ function detenerTaximetro() {
 // FINALIZAR SERVICIO
 // ============================================================
 
-// ============================================================
-// FINALIZAR SERVICIO
-// ============================================================
-
 async function finalizarServicio() {
+
+  if (!conductorEstaConectado()) {
+
+    mostrarNotificacion(
+      "Debes estar conectado para finalizar el servicio."
+    );
+
+    return;
+  }
 
   if (!servicioActivoId) {
 
@@ -1424,7 +1552,6 @@ async function finalizarServicio() {
     );
 
     return;
-
   }
 
   if (!inicioServicioMs) {
@@ -1434,21 +1561,31 @@ async function finalizarServicio() {
     );
 
     return;
-
   }
+
+
+  // ==========================================================
+  // GUARDAR EL ID LOCALMENTE
+  // ==========================================================
+
+  const idServicio =
+    servicioActivoId;
 
 
   // ==========================================================
   // CALCULAR DATOS FINALES
   // ==========================================================
 
-  const ahora = Date.now();
+  const ahora =
+    Date.now();
 
   const duracionMs =
-    ahora - inicioServicioMs;
+    ahora -
+    inicioServicioMs;
 
   const duracionMinutos =
-    duracionMs / 60000;
+    duracionMs /
+    60000;
 
   const valorDistancia =
     distanciaMetros *
@@ -1465,46 +1602,51 @@ async function finalizarServicio() {
 
 
   // ==========================================================
-  // DATOS QUE SE GUARDARÁN EN FIREBASE
+  // DATOS A GUARDAR
   // ==========================================================
 
   const datosFinales = {
 
-    estado: "FINALIZADO",
+    estado:
+      "FINALIZADO",
 
-    // Hora en formato visible
     hora_finalizacion:
       obtenerHora(),
 
-    // Timestamp exacto
     timestamp_finalizacion:
       ahora,
 
-    // Datos del recorrido
     distancia_metros:
-      Math.round(distanciaMetros),
+      Math.round(
+        distanciaMetros
+      ),
 
     duracion_minutos:
       Number(
         duracionMinutos.toFixed(2)
       ),
 
-    // Valores económicos
     valor_distancia:
-      Math.round(valorDistancia),
+      Math.round(
+        valorDistancia
+      ),
 
     valor_tiempo:
-      Math.round(valorTiempo),
+      Math.round(
+        valorTiempo
+      ),
 
     valor_total:
-      Math.round(valorTotal)
+      Math.round(
+        valorTotal
+      )
 
   };
 
 
   console.log(
     "FINALIZANDO SERVICIO:",
-    servicioActivoId
+    idServicio
   );
 
   console.log(
@@ -1522,7 +1664,7 @@ async function finalizarServicio() {
     const referencia =
       ref(
         db,
-        `servicios/${servicioActivoId}`
+        `servicios/${idServicio}`
       );
 
 
@@ -1538,7 +1680,7 @@ async function finalizarServicio() {
 
 
     // ========================================================
-    // VERIFICAR QUE FIREBASE REALMENTE GUARDÓ LOS DATOS
+    // VERIFICAR FIREBASE
     // ========================================================
 
     const verificacion =
@@ -1576,8 +1718,19 @@ async function finalizarServicio() {
     }
 
 
+    if (
+      !datosGuardados.hora_finalizacion
+    ) {
+
+      throw new Error(
+        "Firebase no confirmó la hora de finalización."
+      );
+
+    }
+
+
     // ========================================================
-    // DETENER GPS Y TAXÍMETRO
+    // DETENER GPS / TAXÍMETRO
     // ========================================================
 
     detenerTaximetro();
@@ -1606,7 +1759,7 @@ async function finalizarServicio() {
 
 
     // ========================================================
-    // LIMPIAR VARIABLES LOCALES
+    // LIMPIAR VARIABLES
     // ========================================================
 
     distanciaMetros = 0;
@@ -1628,14 +1781,14 @@ async function finalizarServicio() {
       error
     );
 
-
     mostrarNotificacion(
-      "Error: no fue posible guardar la finalización en Firebase."
+      `Error al finalizar: ${error.message || "no fue posible guardar en Firebase."}`
     );
 
   }
 
 }
+
 
 // ============================================================
 // RESULTADO FINAL
@@ -1683,6 +1836,17 @@ function mostrarResultadoFinal(
 
 function iniciarGPS() {
 
+  // NO PERMITIR GPS SI EL CONDUCTOR NO ESTÁ CONECTADO
+
+  if (!conductorEstaConectado()) {
+
+    actualizarEstadoGPS(
+      "GPS disponible al conectarse"
+    );
+
+    return;
+  }
+
   if (!navigator.geolocation) {
 
     actualizarEstadoGPS(
@@ -1690,7 +1854,6 @@ function iniciarGPS() {
     );
 
     return;
-
   }
 
   if (gpsWatchId !== null) {
@@ -1725,6 +1888,16 @@ async function recibirPosicion(
   position
 ) {
 
+  // Si por alguna razón perdió conexión,
+  // no seguimos enviando ubicación.
+
+  if (!conductorEstaConectado()) {
+
+    detenerGPS();
+
+    return;
+  }
+
   const lat =
     position.coords.latitude;
 
@@ -1751,6 +1924,11 @@ async function recibirPosicion(
   actualizarEstadoGPS(
     `GPS activo ±${Math.round(accuracy)} m`
   );
+
+
+  // ==========================================================
+  // DISTANCIA DEL SERVICIO
+  // ==========================================================
 
   if (
     rastreandoServicio &&
@@ -1795,6 +1973,11 @@ async function recibirPosicion(
 
   }
 
+
+  // ==========================================================
+  // GUARDAR UBICACIÓN
+  // ==========================================================
+
   try {
 
     await update(
@@ -1803,10 +1986,16 @@ async function recibirPosicion(
         `ubicacion_conductores/${CONDUCTOR_ID}`
       ),
       {
-        latitud: lat,
-        longitud: lon,
+
+        latitud:
+          lat,
+
+        longitud:
+          lon,
+
         ultima_actualizacion:
           obtenerHora()
+
       }
     );
 
@@ -1927,7 +2116,9 @@ function calcularDistanciaGPS(
 ) {
 
   const R = 6371000;
-  const rad = Math.PI / 180;
+
+  const rad =
+    Math.PI / 180;
 
   const diferenciaLat =
     (lat2 - lat1) * rad;
@@ -2024,6 +2215,7 @@ function escucharEstadisticas() {
           }
         );
 
+
       if (totalServicios) {
 
         totalServicios.textContent =
@@ -2064,8 +2256,6 @@ function mostrarNotificacion(
   textoNotificacion.textContent =
     mensaje;
 
-  // IMPORTANTE:
-  // style.css utiliza .visible
   notificacion.classList.add(
     "visible"
   );
@@ -2109,9 +2299,6 @@ function mostrarMensajeLogin(
 function mostrarPantallaPrincipal(
   mostrar
 ) {
-
-  // ELIMINAMOS LA CLASE QUE OCULTA
-  // EL CONTENEDOR PRINCIPAL
 
   if (appPrincipal) {
 
