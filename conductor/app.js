@@ -1020,7 +1020,28 @@ function cargarServicioActivo(
       servicio.estado || "";
 
   }
+  // ==========================================================
+  // MOSTRAR / OCULTAR TAXÍMETRO
+  // ==========================================================
 
+  const taximetro =
+    document.getElementById("taximetro");
+
+  if (taximetro) {
+
+    if (servicio.estado === "EN_SERVICIO") {
+
+      taximetro.classList.remove("oculto");
+      taximetro.style.display = "block";
+
+    } else {
+
+      taximetro.classList.add("oculto");
+      taximetro.style.display = "none";
+
+    }
+
+  }
   actualizarBotonesServicio(
     servicio.estado
   );
