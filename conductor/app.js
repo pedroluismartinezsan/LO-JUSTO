@@ -1411,9 +1411,21 @@ function detenerTaximetro() {
 // FINALIZAR SERVICIO
 // ============================================================
 
+// ============================================================
+// FINALIZAR SERVICIO
+// ============================================================
+
 async function finalizarServicio() {
 
-  if (!servicioActivoId) return;
+  if (!servicioActivoId) {
+
+    mostrarNotificacion(
+      "No hay un servicio activo para finalizar."
+    );
+
+    return;
+
+  }
 
   if (!inicioServicioMs) {
 
@@ -1425,16 +1437,18 @@ async function finalizarServicio() {
 
   }
 
-  const ahora =
-    Date.now();
+
+  // ==========================================================
+  // CALCULAR DATOS FINALES
+  // ==========================================================
+
+  const ahora = Date.now();
 
   const duracionMs =
-    ahora -
-    inicioServicioMs;
+    ahora - inicioServicioMs;
 
   const duracionMinutos =
-    duracionMs /
-    60000;
+    duracionMs / 60000;
 
   const valorDistancia =
     distanciaMetros *
@@ -1449,55 +1463,138 @@ async function finalizarServicio() {
     valorDistancia +
     valorTiempo;
 
-  detenerTaximetro();
-  detenerGPS();
 
-  rastreandoServicio = false;
+  // ==========================================================
+  // DATOS QUE SE GUARDARÁN EN FIREBASE
+  // ==========================================================
+
+  const datosFinales = {
+
+    estado: "FINALIZADO",
+
+    // Hora en formato visible
+    hora_finalizacion:
+      obtenerHora(),
+
+    // Timestamp exacto
+    timestamp_finalizacion:
+      ahora,
+
+    // Datos del recorrido
+    distancia_metros:
+      Math.round(distanciaMetros),
+
+    duracion_minutos:
+      Number(
+        duracionMinutos.toFixed(2)
+      ),
+
+    // Valores económicos
+    valor_distancia:
+      Math.round(valorDistancia),
+
+    valor_tiempo:
+      Math.round(valorTiempo),
+
+    valor_total:
+      Math.round(valorTotal)
+
+  };
+
+
+  console.log(
+    "FINALIZANDO SERVICIO:",
+    servicioActivoId
+  );
+
+  console.log(
+    "DATOS A GUARDAR:",
+    datosFinales
+  );
+
+
+  // ==========================================================
+  // GUARDAR EN FIREBASE
+  // ==========================================================
 
   try {
 
-    await update(
+    const referencia =
       ref(
         db,
         `servicios/${servicioActivoId}`
-      ),
-      {
-        estado:
-          "FINALIZADO",
+      );
 
-        hora_finalizacion:
-          obtenerHora(),
 
-        distancia_metros:
-          Math.round(
-            distanciaMetros
-          ),
-
-        duracion_minutos:
-          Number(
-            duracionMinutos.toFixed(2)
-          ),
-
-        valor_distancia:
-          Math.round(
-            valorDistancia
-          ),
-
-        valor_tiempo:
-          Math.round(
-            valorTiempo
-          ),
-
-        valor_total:
-          Math.round(
-            valorTotal
-          )
-      }
+    await update(
+      referencia,
+      datosFinales
     );
+
+
+    console.log(
+      "FIREBASE: servicio actualizado correctamente."
+    );
+
+
+    // ========================================================
+    // VERIFICAR QUE FIREBASE REALMENTE GUARDÓ LOS DATOS
+    // ========================================================
+
+    const verificacion =
+      await get(referencia);
+
+
+    if (!verificacion.exists()) {
+
+      throw new Error(
+        "El servicio no existe después de actualizarlo."
+      );
+
+    }
+
+
+    const datosGuardados =
+      verificacion.val();
+
+
+    console.log(
+      "FIREBASE: datos después de finalizar:",
+      datosGuardados
+    );
+
+
+    if (
+      datosGuardados.estado !==
+      "FINALIZADO"
+    ) {
+
+      throw new Error(
+        "Firebase no confirmó el estado FINALIZADO."
+      );
+
+    }
+
+
+    // ========================================================
+    // DETENER GPS Y TAXÍMETRO
+    // ========================================================
+
+    detenerTaximetro();
+
+    detenerGPS();
+
+    rastreandoServicio = false;
+
+
+    // ========================================================
+    // MOSTRAR RESULTADO
+    // ========================================================
 
     mostrarNotificacion(
       `Servicio finalizado. Total: ${formatoPesos(valorTotal)}`
     );
+
 
     mostrarResultadoFinal(
       distanciaMetros,
@@ -1507,22 +1604,38 @@ async function finalizarServicio() {
       valorTotal
     );
 
+
+    // ========================================================
+    // LIMPIAR VARIABLES LOCALES
+    // ========================================================
+
     distanciaMetros = 0;
+
     inicioServicioMs = null;
+
     ultimaPosicion = null;
+
+
+    console.log(
+      "Servicio finalizado correctamente."
+    );
+
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      "ERROR FINALIZANDO SERVICIO:",
+      error
+    );
+
 
     mostrarNotificacion(
-      "No fue posible finalizar el servicio."
+      "Error: no fue posible guardar la finalización en Firebase."
     );
 
   }
 
 }
-
 
 // ============================================================
 // RESULTADO FINAL
