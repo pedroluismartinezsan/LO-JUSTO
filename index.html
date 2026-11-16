@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#4d2186">
+  <meta name="description" content="LOJUSTO — Un servicio a tu manera">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon-192.png">
+  <title>LOJUSTO · Un servicio a tu manera</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#26183b;background:#f7f4fc}
+    *{box-sizing:border-box}body{margin:0}header{background:linear-gradient(135deg,#371268,#6c36a6);color:white;text-align:center;padding:48px 20px 44px}
+    h1{font-size:clamp(2.4rem,9vw,3.7rem);letter-spacing:.08em;margin:0}header p{color:#f4ce72;margin:5px 0 0}
+    main{width:min(94%,480px);margin:-22px auto 40px}.panel{background:white;padding:27px;border-radius:22px;box-shadow:0 12px 35px #35135d1c}
+    h2{margin:0 0 8px;font-size:1.5rem}p{line-height:1.5}.muted{color:#685d76;font-size:.94rem}
+    label{display:block;margin:17px 0 6px;font-weight:650}input{width:100%;border:1px solid #cfc5dc;border-radius:12px;padding:13px;font-size:1rem}
+    input:focus{outline:3px solid #bca0e3;border-color:#66319b}button{cursor:pointer;border:0;border-radius:12px;padding:14px;font-size:1rem;font-weight:700}
+    .primary{background:#51218b;color:white;width:100%;margin-top:20px}.secondary{background:#f0e9f8;color:#51218b;width:100%;margin-top:10px}
+    .note{background:#fff8e7;border-left:4px solid #d5a746;border-radius:8px;padding:12px;font-size:.9rem;margin-top:18px}
+    .status{min-height:1.5rem;margin-top:14px;font-size:.94rem;overflow-wrap:anywhere}footer{text-align:center;color:#776c83;font-size:.8rem;padding:0 16px 25px}
+    [hidden]{display:none!important}
+  </style>
+</head>
+<body>
+  <header><h1>LOJUSTO</h1><p>Un servicio a tu manera</p></header>
+  <main>
+    <section class="panel" aria-labelledby="titulo">
+      <h2 id="titulo">Bienvenido</h2>
+      <p class="muted">Estamos preparando tu aplicación para solicitar vehículos cercanos.</p>
+      <form id="login">
+        <label for="phone">Número de celular</label>
+        <input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="Ej. 3001234567" required>
+        <label for="password">Contraseña</label>
+        <input id="password" type="password" autocomplete="current-password" placeholder="Tu contraseña" required>
+        <button class="primary" type="submit">INGRESAR</button>
+      </form>
+      <button id="register" class="secondary" type="button">REGISTRARME</button>
+      <div id="message" class="status" role="status" aria-live="polite"></div>
+      <div class="note"><strong>Versión inicial:</strong> todavía no hay autenticación ni envío de solicitudes. No introduzcas una contraseña real hasta conectar el sistema seguro.</div>
+      <button id="gps" class="secondary" type="button">PROBAR MI UBICACIÓN GPS</button>
+      <p id="location" class="muted" aria-live="polite"></p>
+    </section>
+  </main>
+  <footer>LOJUSTO © 2026 · Proyecto en desarrollo</footer>
+  <script>
+    const message=document.getElementById('message');
+    document.getElementById('login').addEventListener('submit',e=>{
+      e.preventDefault();
+      message.textContent='El inicio de sesión estará disponible cuando configuremos la autenticación segura.';
+      document.getElementById('password').value='';
+    });
+    document.getElementById('register').addEventListener('click',()=>{
+      message.textContent='El registro de pasajeros se habilitará al conectar la base de datos y autenticación.';
+    });
+    document.getElementById('gps').addEventListener('click',()=>{
+      const output=document.getElementById('location');
+      if(!navigator.geolocation){output.textContent='Este navegador no admite GPS.';return}
+      output.textContent='Solicitando permiso de ubicación…';
+      navigator.geolocation.getCurrentPosition(
+        pos=>{output.textContent='GPS disponible. Precisión aproximada: '+Math.round(pos.coords.accuracy)+' metros. No se ha enviado tu ubicación a ningún servidor.'},
+        err=>{output.textContent='No se pudo obtener la ubicación. Comprueba los permisos del navegador. ('+err.code+')'},
+        {enableHighAccuracy:true,timeout:15000,maximumAge:0}
+      );
+    });
+    if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}
+  </script>
+</body>
+</html>
