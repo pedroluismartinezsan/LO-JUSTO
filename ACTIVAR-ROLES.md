@@ -1,20 +1,17 @@
-# Activación segura de roles — LOJUSTO
+# Activar administrador y conductores — LOJUSTO (sin pagos)
 
-## Estado
-El registro e inicio de sesión de pasajeros usan Firebase Authentication (correo/contraseña). El panel de administración exige el claim firmado `admin: true`; el panel de conductor exige `driver: true`. **La interfaz no es una frontera de seguridad:** las reglas de Firestore también verifican esos claims. El archivo `firestore.rules` está en GitHub, pero **no se despliega automáticamente**.
+El ingreso es siempre con correo y contraseña de Firebase Authentication. Para saber quién puede administrar, LOJUSTO lee un documento de Firestore. No se necesitan Cloud Shell, Admin SDK, claves privadas, funciones de pago ni plan Blaze.
 
-## Primer administrador
-1. Cambiar cualquier contraseña compartida por chat y elegir una contraseña nueva y exclusiva.
-2. En Firebase Console → Authentication → Users, crear o localizar la cuenta con el correo administrativo indicado por el propietario. No poner contraseñas en GitHub.
-3. Desde un entorno de confianza que use Firebase Admin SDK y credenciales de administrador protegidas, localizar el UID de esa cuenta y asignar **solo a ese UID** el custom claim `{admin:true}` mediante `setCustomUserClaims`. El correo por sí solo **no** concede el rol. No ejecutar el Admin SDK en GitHub Pages ni subir claves privadas al repositorio.
-4. Volver a iniciar sesión para refrescar el token y verificar el acceso.
-5. En Firebase Console → Firestore → Rules, revisar y publicar `firestore.rules` solo después de confirmar que coincide con las colecciones utilizadas. Hasta entonces pueden seguir vigentes las reglas anteriores.
+## Una sola vez: activar administrador
+
+1. En Firebase Console del proyecto `lo-justo-app`, abre **Firestore Database → Datos**.
+2. Crea la colección `roles` y un documento cuyo ID sea **exactamente el UID del administrador** que aparece en Authentication → Users.
+3. Agrega el campo `admin`, tipo **boolean**, valor **true**. Guarda.
+4. En **Firestore Database → Reglas**, copia el contenido completo de `firestore.rules` de este repositorio y pulsa **Publicar**.
+5. Entra normalmente con el correo y contraseña del administrador en LOJUSTO.
 
 ## Conductores
-Solo el administrador debe aprobarlos. Un entorno confiable debe asignar el claim `{driver:true}` al UID correcto; **registrarse como pasajero no activa el rol**. La gestión real de conductores todavía necesita implementación de backend seguro.
+En Firebase Authentication crea o identifica la cuenta del conductor y su UID. En Firestore → Datos crea `roles/{UID_DEL_CONDUCTOR}` con campo boolean `driver: true`. Solo alguien con acceso administrativo a Firebase Console debe asignar roles. El registro público no concede permisos.
 
-## Limitaciones pendientes
-- No se han creado cuentas ni asignado roles desde este repositorio.
-- La colección `rides` permanece cerrada en las reglas propuestas: no hay viajes reales.
-- Para aceptación exclusiva, PIN, tarifas definitivas e informes se requieren operaciones de confianza y pruebas integrales.
-- El plan Firebase Spark tiene cuotas; evitar activar Blaze o servicios de pago.
+## Estado
+Las reglas guardadas en GitHub **no se publican automáticamente** en Firebase. Las solicitudes reales de viaje todavía no están activas; `rides` permanece cerrado. El proyecto utiliza Firebase Spark y GitHub Pages sin servicios de pago, sujeto a las cuotas gratuitas.
