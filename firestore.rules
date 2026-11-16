@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Preparación segura: no desplegar hasta implementar autenticación
+    // y reglas por rol verificables. Denegar todo por defecto.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
