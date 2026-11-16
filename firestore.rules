@@ -2,11 +2,17 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
-    function admin() { return signedIn() && request.auth.token.admin == true; }
-    function driver() { return signedIn() && request.auth.token.driver == true; }
     function owner(uid) { return signedIn() && request.auth.uid == uid; }
+    function rolePath() { return /databases/$(database)/documents/roles/$(request.auth.uid); }
+    function admin() { return signedIn() && exists(rolePath()) && get(rolePath()).data.admin == true; }
+    function driver() { return signedIn() && exists(rolePath()) && get(rolePath()).data.driver == true; }
 
-    // Los perfiles no pueden autoconcederse permisos administrativos.
+    // Los permisos se asignan exclusivamente desde la consola Firebase.
+    match /roles/{uid} {
+      allow get: if owner(uid) || admin();
+      allow list: if admin();
+      allow create, update, delete: if false;
+    }
     match /profiles/{uid} {
       allow get: if owner(uid) || admin();
       allow list: if admin();
@@ -22,26 +28,15 @@ service cloud.firestore {
         && request.resource.data.displayName.size() <= 120;
       allow delete: if admin();
     }
-
-    // Ningún pasajero puede crear un conductor ni concederse el rol.
     match /drivers/{uid} {
       allow read: if admin() || (driver() && owner(uid));
       allow write: if admin();
     }
-
     match /settings/{doc} {
       allow read: if signedIn();
       allow write: if admin();
     }
-
-    // Los viajes permanecen cerrados hasta desplegar transacciones
-    // y validaciones completas, incluido PIN y cálculo del taxímetro.
-    match /rides/{rideId} {
-      allow read, write: if false;
-    }
-
-    match /{document=**} {
-      allow read, write: if false;
-    }
+    match /rides/{rideId} { allow read, write: if false; }
+    match /{document=**} { allow read, write: if false; }
   }
 }
