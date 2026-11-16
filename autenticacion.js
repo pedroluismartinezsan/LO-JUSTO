@@ -1,5 +1,5 @@
 import {firebaseApp} from './firebase-app.js';
-import {getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged,updateProfile} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
+import {getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged,updateProfile,sendPasswordResetEmail} from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
 export const auth=getAuth(firebaseApp);
 export function watchSession(callback){return onAuthStateChanged(auth,callback)}
 export async function registerPassenger({firstName,lastName,email,password}){
@@ -11,6 +11,7 @@ export async function registerPassenger({firstName,lastName,email,password}){
 }
 export async function login(email,password){return (await signInWithEmailAndPassword(auth,email.trim(),password)).user}
 export function logout(){return signOut(auth)}
+export async function resetPassword(email){if(!email||!email.trim())throw Error('Escribe tu correo electrónico');await sendPasswordResetEmail(auth,email.trim())}
 export function friendlyAuthError(error){
  const code=error?.code||'';
  const messages={
