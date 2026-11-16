@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#4d2186">
+<title>LOJUSTO · Vista previa pasajero</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoaX1g5QfJbP0=" crossorigin="">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f7f4fc;color:#26183b;font:16px system-ui,-apple-system,Segoe UI,sans-serif}header{background:#51218b;color:white;padding:20px;text-align:center}header h1{margin:0;font-size:2rem;letter-spacing:.06em}header p{margin:3px;color:#f1cd73;font-size:.9rem}main{max-width:560px;margin:20px auto;padding:0 14px}.card{background:white;border-radius:18px;padding:22px;box-shadow:0 10px 30px #2a10551c}h2{margin:0 0 7px}.hint{font-size:.9rem;color:#675b76;line-height:1.5}label{display:block;margin:20px 0 7px;font-weight:700}input{display:block;width:100%;border:1px solid #cbbfdc;border-radius:10px;padding:13px;font-size:1rem}button{width:100%;border:0;border-radius:12px;padding:14px;margin-top:12px;font-weight:700;font-size:1rem;cursor:pointer}.primary{background:#51218b;color:white}.secondary{background:#eee7f8;color:#51218b}.notice{background:#fff6dc;padding:12px;border-radius:10px;font-size:.87rem;line-height:1.5}.result{margin-top:14px;min-height:24px;font-size:.92rem;line-height:1.5}#map{height:310px;border-radius:12px;margin-top:15px;background:#eee8f5}.preview{background:#f6f0fc;border-radius:12px;padding:14px;margin-top:15px;line-height:1.6}a{color:#51218b}footer{text-align:center;padding:24px;font-size:.8rem;color:#766b83}[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header><h1>LOJUSTO</h1><p>Un servicio a tu manera</p></header>
+<main><section class="card">
+<a href="./index.html">← Volver al inicio</a>
+<h2 style="margin-top:16px">Solicitar vehículo</h2>
+<p class="hint">Prueba el GPS y comprueba cómo se mostrará tu barrio y ubicación al conductor.</p>
+<p class="notice"><strong>Modo de prueba:</strong> esta pantalla no solicita vehículos ni comparte tu ubicación con conductores. No ingreses información personal real.</p>
+<label for="barrio">Nombre del barrio</label>
+<input id="barrio" maxlength="80" autocomplete="off" placeholder="Ej. Centro" required>
+<button id="locate" class="secondary" type="button">📍 OBTENER MI UBICACIÓN GPS</button>
+<p id="status" class="result" role="status" aria-live="polite">Permite el acceso al GPS cuando tu navegador lo solicite.</p>
+<div id="map" role="img" aria-label="Mapa de tu ubicación"></div>
+<button id="preview" class="primary" type="button">VER VISTA PREVIA DE SOLICITUD</button>
+<div id="details" class="preview" hidden></div>
+</section></main>
+<footer>LOJUSTO © 2026 · Desarrollo</footer>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+const status=document.getElementById('status'),details=document.getElementById('details');
+let position=null,map=null,marker=null;
+if(typeof L==='undefined'){status.textContent='No se pudo cargar el mapa. Comprueba tu conexión a internet.'}
+else {map=L.map('map',{zoomControl:true}).setView([4.5,-74],5);L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map)}
+document.getElementById('locate').addEventListener('click',()=>{
+  details.hidden=true;
+  if(!navigator.geolocation){status.textContent='Tu navegador no admite geolocalización.';return}
+  status.textContent='Obteniendo ubicación. Acepta el permiso de GPS…';
+  navigator.geolocation.getCurrentPosition(p=>{
+    position={lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy};
+    status.textContent='Ubicación obtenida. Precisión estimada: '+Math.round(position.accuracy)+' m. Los 400 m para conductores se verificarán más adelante.';
+    if(map){map.setView([position.lat,position.lng],16);if(marker)marker.remove();marker=L.marker([position.lat,position.lng]).addTo(map).bindPopup('Ubicación aproximada de solicitud').openPopup()}
+  },e=>{position=null;status.textContent='No se pudo obtener GPS. Revisa permisos y ubicación del dispositivo (código '+e.code+').'},
+  {enableHighAccuracy:true,timeout:20000,maximumAge:0});
+});
+document.getElementById('preview').addEventListener('click',()=>{
+  const barrio=document.getElementById('barrio').value.trim();
+  if(!barrio){status.textContent='Escribe el nombre del barrio.';document.getElementById('barrio').focus();return}
+  if(!position){status.textContent='Primero obtén tu ubicación GPS.';return}
+  details.replaceChildren();
+  const title=document.createElement('strong');title.textContent='VISTA PREVIA — SERVICIO SOLICITADO';
+  const name=document.createElement('div');name.textContent='Barrio: '+barrio;
+  const gps=document.createElement('div');gps.textContent='Ubicación GPS disponible para el mapa';
+  const note=document.createElement('small');note.textContent='No se envió ninguna solicitud. El envío real requerirá iniciar sesión y conectar el servidor.';
+  details.append(title,name,gps,note);details.hidden=false;
+  status.textContent='Vista previa creada únicamente en este dispositivo.';
+});
+</script>
+</body></html>
