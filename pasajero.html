@@ -11,13 +11,13 @@
 </head>
 <body>
 <header class="page-head"><div class="shell"><nav class="topbar"><a class="brand" href="./index.html">LO<span>JUSTO</span></a><a class="back" href="./index.html">← Inicio</a></nav><span class="eyebrow">ESPACIO PASAJERO</span><h1>¿A dónde vamos? 📍</h1><p>Tu próximo viaje comienza con un punto de partida.</p></div></header><main class="page-main"><section class="panel fade-up"><span class="pill">Explora la experiencia</span><h2 style="margin-top:16px">Solicitar vehículo</h2>
-<p class="hint">Prueba el GPS y comprueba cómo se mostrará tu barrio y ubicación al conductor.</p>
+<p class="muted">Indica tu barrio y selecciona en el mapa el lugar donde deseas que te recojan.</p>
 <p class="notice"><strong>Modo de prueba:</strong> esta pantalla no solicita vehículos ni comparte tu ubicación con conductores. No ingreses información personal real.</p>
 <label for="barrio">Nombre del barrio</label>
 <input id="barrio" maxlength="80" autocomplete="off" placeholder="Ej. Centro" required>
 <button id="locate" class="btn btn-soft btn-block" type="button" style="margin-top:14px">📍 Usar mi ubicación actual</button>
 <p id="status" class="result" role="status" aria-live="polite">Permite el acceso al GPS cuando tu navegador lo solicite.</p>
-<div id="map" role="img" aria-label="Mapa de tu ubicación"></div>
+<div id="map" role="application" aria-label="Mapa interactivo para elegir punto de recogida"></div><p class="muted" style="font-size:.84rem">💡 Puedes tocar el mapa para ajustar el punto de recogida. El GPS solo se solicita cuando pulsas el botón.</p><div id="pickup" class="preview" hidden><strong>📍 Punto de recogida seleccionado</strong><div id="pickupDetail" class="muted"></div><a id="mapsLink" target="_blank" rel="noopener noreferrer" href="#">Abrir ubicación en Google Maps ↗</a></div>
 <button id="preview" class="btn btn-primary btn-block" type="button" style="margin-top:18px">Ver cómo se verá mi solicitud →</button>
 <div id="details" class="preview" hidden></div>
 <a class="btn btn-soft btn-block" href="./demo-viaje.html" style="margin-top:16px">🚘 Ver un viaje completo de demostración →</a></section></main>
@@ -25,30 +25,30 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
 const status=document.getElementById('status'),details=document.getElementById('details');
-let position=null,map=null,marker=null;
+let position=null,map=null,marker=null;function setPickup(lat,lng,accuracy=null){position={lat,lng,accuracy};if(map){map.setView([lat,lng],16);if(marker)marker.remove();marker=L.marker([lat,lng],{draggable:true}).addTo(map).bindPopup('Punto de recogida').openPopup();marker.on('dragend',()=>{const p=marker.getLatLng();setPickup(p.lat,p.lng)})}document.getElementById('pickup').hidden=false;document.getElementById('pickupDetail').textContent='Coordenadas: '+lat.toFixed(5)+', '+lng.toFixed(5)+(accuracy===null?' · Seleccionado manualmente':' · Precisión estimada: '+Math.round(accuracy)+' m');document.getElementById('mapsLink').href='https://www.google.com/maps?q='+encodeURIComponent(lat+','+lng);details.hidden=true;}
 if(typeof L==='undefined'){status.textContent='No se pudo cargar el mapa. Comprueba tu conexión a internet.'}
-else {map=L.map('map',{zoomControl:true}).setView([4.5,-74],5);L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map)}
+else {map=L.map('map',{zoomControl:true}).setView([4.5,-74],5);L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);map.on('click',e=>{setPickup(e.latlng.lat,e.latlng.lng);status.textContent='Punto de recogida seleccionado en el mapa. Puedes arrastrar el marcador para ajustarlo.'})}
 document.getElementById('locate').addEventListener('click',()=>{
   details.hidden=true;
   if(!navigator.geolocation){status.textContent='Tu navegador no admite geolocalización.';return}
   status.textContent='Obteniendo ubicación. Acepta el permiso de GPS…';
   navigator.geolocation.getCurrentPosition(p=>{
-    position={lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy};
+    setPickup(p.coords.latitude,p.coords.longitude,p.coords.accuracy);
     status.textContent='Ubicación obtenida. Precisión estimada: '+Math.round(position.accuracy)+' m. Los 400 m para conductores se verificarán más adelante.';
-    if(map){map.setView([position.lat,position.lng],16);if(marker)marker.remove();marker=L.marker([position.lat,position.lng]).addTo(map).bindPopup('Ubicación aproximada de solicitud').openPopup()}
-  },e=>{position=null;status.textContent='No se pudo obtener GPS. Revisa permisos y ubicación del dispositivo (código '+e.code+').'},
+
+  },e=>{status.textContent='No se pudo obtener GPS. Revisa permisos y ubicación del dispositivo (código '+e.code+').'},
   {enableHighAccuracy:true,timeout:20000,maximumAge:0});
 });
 document.getElementById('preview').addEventListener('click',()=>{
   const barrio=document.getElementById('barrio').value.trim();
   if(!barrio){status.textContent='Escribe el nombre del barrio.';document.getElementById('barrio').focus();return}
-  if(!position){status.textContent='Primero obtén tu ubicación GPS.';return}
+  if(!position){status.textContent='Primero usa el GPS o toca el mapa para indicar el punto de recogida.';return}
   details.replaceChildren();
   const title=document.createElement('strong');title.textContent='VISTA PREVIA — SERVICIO SOLICITADO';
   const name=document.createElement('div');name.textContent='Barrio: '+barrio;
-  const gps=document.createElement('div');gps.textContent='Ubicación GPS disponible para el mapa';
+  const gps=document.createElement('div');gps.textContent='Punto de recogida: '+position.lat.toFixed(5)+', '+position.lng.toFixed(5);
   const note=document.createElement('small');note.textContent='No se envió ninguna solicitud. El envío real requerirá iniciar sesión y conectar el servidor.';
-  details.append(title,name,gps,note);details.hidden=false;
+  const link=document.createElement('a');link.href='https://www.google.com/maps?q='+encodeURIComponent(position.lat+','+position.lng);link.target='_blank';link.rel='noopener noreferrer';link.textContent='Ver punto de recogida en Google Maps ↗';details.append(title,name,gps,link,note);details.hidden=false;
   status.textContent='Vista previa creada únicamente en este dispositivo.';
 });
 </script>
