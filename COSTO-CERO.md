@@ -12,10 +12,10 @@
 - No hay servidor de autenticación propio contratado.
 
 ## Seguridad y limitaciones
-- Requisito de producto: pasajeros se registran con nombre, apellido, número de celular/WhatsApp y contraseña; no se solicita correo.
-- Firebase Authentication estándar **no admite celular + contraseña como proveedor directo**.
-- No simular correos electrónicos a partir de teléfonos ni guardar contraseñas o hashes en Firestore accesible al cliente.
-- Hasta contar con un mecanismo de autenticación seguro, **no habilitar registro ni acceso real con celular + contraseña**.
+- Requisito actualizado: pasajeros se registran con nombre, apellido, correo electrónico y contraseña; Firebase Authentication Email/Password habilitado.
+- Firebase Authentication usa correo electrónico y contraseña, sin SMS.
+- Nunca guardar contraseñas ni hashes en Firestore o GitHub.
+- El registro e ingreso de pasajeros usan Firebase Authentication; esto NO concede rol de conductor ni administrador.
 - Los conductores deben ser dados de alta exclusivamente por el administrador, con autorización comprobada del lado del servidor.
 - No usar rutas ocultas, identificadores o reglas de interfaz como sustituto de autorización.
 - Firestore debe mantener reglas restrictivas; nunca abrir escrituras públicas para hacer funcionar una demostración.
@@ -24,5 +24,9 @@
 ## Próximos pasos sin costo
 1. Mejorar las pantallas públicas y la experiencia de la PWA.
 2. Preparar modelos de datos y reglas restrictivas de Firestore, sin desplegarlas automáticamente.
-3. Evaluar una solución verificable de autenticación teléfono+contraseña que funcione en el plan gratuito; si no es posible, mantener esta función pendiente y explicar el bloqueo antes de habilitarla.
+3. Configurar y desplegar reglas de Firestore por roles; aprovisionar administrador con privilegios verificados en el servidor.
 4. Revisar las cuotas y límites gratuitos antes de añadir sincronización de GPS, notificaciones o informes.
+
+## Administración
+- El correo administrativo designado por el propietario se configura exclusivamente en Firebase Authentication y los permisos se asignan mediante un mecanismo confiable. No guardar contraseñas administrativas en el repositorio.
+- La ruta de administración no protege datos por sí sola; las reglas de Firestore deben denegar accesos no autorizados.
