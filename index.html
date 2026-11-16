@@ -66,5 +66,9 @@
     });
     if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}
   </script>
+  <script type="module">
+    import {firebaseApp} from "./firebase-app.js";
+    console.info("Firebase inicializado para proyecto:",firebaseApp.options.projectId);
+  </script>
 </body>
 </html>
