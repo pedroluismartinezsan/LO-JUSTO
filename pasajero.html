@@ -10,7 +10,7 @@
 <style>main.page-main{max-width:800px}#map{height:340px}.result{min-height:22px;line-height:1.6;color:#5e4387;font-size:.92rem}label{display:block;margin:18px 0 8px;font-weight:800}.notice{margin:12px 0}.preview{line-height:1.8}</style>
 </head>
 <body>
-<header class="page-head"><div class="shell"><nav class="topbar"><a class="brand" href="./index.html">LO<span>JUSTO</span></a><a class="back" href="./index.html">← Inicio</a></nav><span class="eyebrow">ESPACIO PASAJERO</span><h1>¿A dónde vamos? 📍</h1><p>Tu próximo viaje comienza con un punto de partida.</p></div></header><main class="page-main"><section class="panel fade-up"><span class="pill">Explora la experiencia</span><h2 style="margin-top:16px">Solicitar vehículo</h2>
+<header class="page-head"><div class="shell"><nav class="topbar"><a class="brand" href="./index.html">LO<span>JUSTO</span></a><a class="back" href="./index.html">← Inicio</a></nav><span class="eyebrow">ESPACIO PASAJERO</span><h1>¿A dónde vamos? 📍</h1><p>Tu próximo viaje comienza con un punto de partida.</p></div></header><main class="page-main"><section class="panel fade-up" id="sessionBox"><span class="pill">🔐 Mi cuenta</span><p id="sessionStatus" class="muted" role="status" aria-live="polite">Comprobando sesión…</p><a id="sessionLogin" class="btn btn-soft btn-block" href="./index.html#acceso" hidden>Ingresar con correo y contraseña →</a><button id="sessionLogout" class="btn btn-outline btn-block" type="button" hidden>Cerrar sesión</button></section><section class="panel fade-up"><span class="pill">Explora la experiencia</span><h2 style="margin-top:16px">Solicitar vehículo</h2>
 <p class="muted">Indica tu barrio y selecciona en el mapa el lugar donde deseas que te recojan.</p>
 <p class="notice"><strong>Modo de prueba:</strong> esta pantalla no solicita vehículos ni comparte tu ubicación con conductores. No ingreses información personal real.</p>
 <label for="barrio">Nombre del barrio</label>
@@ -51,5 +51,14 @@ document.getElementById('preview').addEventListener('click',()=>{
   const link=document.createElement('a');link.href='https://www.google.com/maps?q='+encodeURIComponent(position.lat+','+position.lng);link.target='_blank';link.rel='noopener noreferrer';link.textContent='Ver punto de recogida en Google Maps ↗';details.append(title,name,gps,link,note);details.hidden=false;
   status.textContent='Vista previa creada únicamente en este dispositivo.';
 });
+</script>
+<script type="module">
+import {watchSession,logout} from './autenticacion.js';
+const sessionStatus=document.getElementById('sessionStatus'),sessionLogin=document.getElementById('sessionLogin'),sessionLogout=document.getElementById('sessionLogout');
+watchSession(user=>{
+ if(user){sessionStatus.textContent='Sesión activa: '+(user.displayName||user.email)+'. El envío de solicitudes reales sigue en preparación.';sessionLogin.hidden=true;sessionLogout.hidden=false}
+ else{sessionStatus.textContent='Puedes explorar el mapa sin cuenta. Para utilizar el servicio real necesitarás iniciar sesión.';sessionLogin.hidden=false;sessionLogout.hidden=true}
+});
+sessionLogout.addEventListener('click',async()=>{try{await logout()}catch{sessionStatus.textContent='No se pudo cerrar la sesión. Inténtalo de nuevo.'}});
 </script>
 </body></html>
